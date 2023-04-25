@@ -7,15 +7,6 @@ _generate/
 *.egg-info
 *env*
 
-mtests
-
-
-# custom
-.idea
-_docs
-_examples
-src/.idea
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -148,3 +139,10 @@ dmypy.json
 
 # vscode
 .vscode
+
+# custom
+mtests
+.idea
+_docs
+_examples
+src/.idea
