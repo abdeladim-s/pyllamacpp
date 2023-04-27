@@ -1,10 +1,11 @@
 /**
  ********************************************************************************
  * @file    main.cpp
- * @author  [abdeladim-s](https://github.com/abdeladim-s)
+ * @author  [Abdeladim Sadiki](https://github.com/abdeladim-s)
  * @date    2023
  * @brief   Python bindings for [llama.cpp](https://github.com/ggerganov/llama.cpp) using Pybind11
- *
+ * @brief   llama.cpp is licensed under MIT Copyright (c) 2023 Georgi Gerganov,
+            please see [llama.cpp License](./llama.cpp_LICENSE)
  * @par
  * COPYRIGHT NOTICE: (c) 2023.
  ********************************************************************************
@@ -49,12 +50,14 @@ void llama_free_wrapper(struct llama_context_wrapper * ctx_w){
 }
 
 int llama_eval_wrapper(struct llama_context_wrapper * ctx_w,
-               const llama_token * tokens,
+               py::array_t<llama_token> tokens,
                int   n_tokens,
                int   n_past,
                int   n_threads){
    struct llama_context * ctx = ctx_w->ptr;
-   return llama_eval(ctx, tokens, n_tokens, n_past, n_threads);
+   py::buffer_info buf = tokens.request();
+   llama_token *tokens_ptr = static_cast<llama_token *>(buf.ptr);
+   return llama_eval(ctx, tokens_ptr, n_tokens, n_past, n_threads);
 }
 
 std::vector<llama_token> llama_tokenize_wrapper(
@@ -99,9 +102,35 @@ int llama_n_embd_wrapper(struct llama_context_wrapper * ctx_w){
     return llama_n_embd(ctx);
 }
 
+pybind11::array wrap_array_ptr(float *v) {
+  auto capsule = py::capsule(
+      &v, [](void *v) { delete reinterpret_cast<std::vector<float> *>(v); });
+  return py::array(static_cast<pybind11::ssize_t>(sizeof(v)), v,
+                   capsule);
+}
+
+//py::array llama_get_logits_wrapper(struct llama_context_wrapper * ctx_w){
+//   struct llama_context * ctx = ctx_w->ptr;
+//   auto logits = llama_get_logits(ctx);
+////    std::vector<float> logits_vect;
+////    logits_vect.assign(std::begin(logits), std::end(logits));
+//   return wrap_array_ptr(logits);
+////    return py::buffer_info(
+////            m.data(),                               /* Pointer to buffer */
+////            sizeof(float),                          /* Size of one scalar */
+////            py::format_descriptor<float>::format(), /* Python struct-style format descriptor */
+////            2,                                      /* Number of dimensions */
+////            { m.rows(), m.cols() },                 /* Buffer dimensions */
+////            { sizeof(float) * m.cols(),             /* Strides (in bytes) for each index */
+////              sizeof(float) }
+////        );
+//
+//}
+
 float * llama_get_logits_wrapper(struct llama_context_wrapper * ctx_w){
-    struct llama_context * ctx = ctx_w->ptr;
-    return llama_get_logits(ctx);
+   struct llama_context * ctx = ctx_w->ptr;
+  return llama_get_logits(ctx);
+
 }
 
 float * llama_get_embeddings_wrapper(struct llama_context_wrapper * ctx_w){
@@ -116,14 +145,16 @@ const char * llama_token_to_str_wrapper(struct llama_context_wrapper * ctx_w, ll
 
 llama_token llama_sample_top_p_top_k_wrapper(
         struct llama_context_wrapper * ctx_w,
-        const llama_token * last_n_tokens_data,
+        py::array_t<llama_token> last_n_tokens_data,
         int   last_n_tokens_size,
         int   top_k,
         float   top_p,
         float   temp,
         float   repeat_penalty){
     struct llama_context * ctx = ctx_w->ptr;
-    return llama_sample_top_p_top_k(ctx, last_n_tokens_data, last_n_tokens_size, top_k, top_p, temp, repeat_penalty);
+    py::buffer_info buf1 = last_n_tokens_data.request();
+    auto *last_n_tokens_data_ptr = static_cast<llama_token *>(buf1.ptr);
+    return llama_sample_top_p_top_k(ctx, last_n_tokens_data_ptr, last_n_tokens_size, top_k, top_p, temp, repeat_penalty);
 }
 
 void llama_print_timings_wrapper(struct llama_context_wrapper * ctx_w){
@@ -167,7 +198,7 @@ std::string gpt_random_prompt(std::mt19937 & rng) {
 
 // quick and dirty implementation! just copied from main.cpp with some minor changes
 // Needs lots of improvements
-int llama_generate(struct llama_context_wrapper * ctx_w, gpt_params params, py::function new_text_callback, py::function grab_text_callback, bool verbose){
+int llama_generate(struct llama_context_wrapper * ctx_w, gpt_params params, py::function new_text_callback, bool verbose){
 
     if (params.perplexity) {
         printf("\n************\n");
@@ -303,7 +334,7 @@ int llama_generate(struct llama_context_wrapper * ctx_w, gpt_params params, py::
         fprintf(stderr, "\n");
     }
 
-   if (params.interactive) {
+//    if (params.interactive) {
 //#if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
 //        struct sigaction sigint_action;
 //        sigint_action.sa_handler = sigint_handler;
@@ -314,18 +345,18 @@ int llama_generate(struct llama_context_wrapper * ctx_w, gpt_params params, py::
 //        signal(SIGINT, sigint_handler);
 //#endif
 //
-       fprintf(stderr, "%s: interactive mode on.\n", __func__);
-
-       if (params.antiprompt.size()) {
-           for (auto antiprompt : params.antiprompt) {
-               fprintf(stderr, "Reverse prompt: '%s'\n", antiprompt.c_str());
-           }
-       }
-
-       if (!params.input_prefix.empty()) {
-           fprintf(stderr, "Input prefix: '%s'\n", params.input_prefix.c_str());
-       }
-   }
+//        fprintf(stderr, "%s: interactive mode on.\n", __func__);
+//
+//        if (params.antiprompt.size()) {
+//            for (auto antiprompt : params.antiprompt) {
+//                fprintf(stderr, "Reverse prompt: '%s'\n", antiprompt.c_str());
+//            }
+//        }
+//
+//        if (!params.input_prefix.empty()) {
+//            fprintf(stderr, "Input prefix: '%s'\n", params.input_prefix.c_str());
+//        }
+//    }
     fprintf(stderr, "sampling: temp = %f, top_k = %d, top_p = %f, repeat_last_n = %i, repeat_penalty = %f\n",
             params.temp, params.top_k, params.top_p, params.repeat_last_n, params.repeat_penalty);
     fprintf(stderr, "generate: n_ctx = %d, n_batch = %d, n_predict = %d, n_keep = %d\n", n_ctx, params.n_batch, params.n_predict, params.n_keep);
@@ -430,7 +461,8 @@ int llama_generate(struct llama_context_wrapper * ctx_w, gpt_params params, py::
 
             // decrement remaining sampling budget
             --n_remain;
-        } else {
+        }
+        else {
             // some user input remains from prompt or interaction, forward it to processing
             while ((int) embd_inp.size() > n_consumed) {
                 embd.push_back(embd_inp[n_consumed]);
@@ -497,31 +529,20 @@ int llama_generate(struct llama_context_wrapper * ctx_w, gpt_params params, py::
                 std::string line;
                 bool another_line = true;
                 do {
-                    py::handle x = grab_text_callback();
-
-                    if (x.is_none())
-                    {
+                    if (!std::getline(std::cin, line)) {
+                        // input stream is bad or EOF received
                         return 0;
                     }
-                    else if (!py::isinstance<py::str>(x))
-                    {
-                        fprintf(stderr, "%s : input was not of type py::str. will ignore.\n", __func__);
+                    if (line.empty() || line.back() != '\\') {
+                        another_line = false;
+                    } else {
+                        line.pop_back(); // Remove the continue character
                     }
-                    else
-                    {
-                        line = x.cast<std::string>();
-                        if (line.empty() || line.back() != '\\') {
-                            another_line = false;
-                        } else {
-                            line.pop_back(); // Remove the continue character
-                        }
-                        buffer += line + '\n'; // Append the line to the result
-                    }
-
+                    buffer += line + '\n'; // Append the line to the result
                 } while (another_line);
 
                 // done taking input, reset color
-//                set_console_color(con_st, CONSOLE_COLOR_DEFAULT);
+//                 set_console_color(con_st, CONSOLE_COLOR_DEFAULT);
 
                 // Add tokens to embd only if the input buffer is non-empty
                 // Entering a empty line lets the user pass control back
@@ -574,6 +595,23 @@ int llama_generate(struct llama_context_wrapper * ctx_w, gpt_params params, py::
     return 0;
 }
 
+// gptj
+//class PyLLModel : public LLModel {
+//public:
+//    /* Inherit the constructors */
+//    using LLModel::LLModel;
+//
+//    /* Trampoline (need one for each virtual function) */
+//    bool isModelLoaded() override {
+//        PYBIND11_OVERRIDE_PURE(
+//            bool, /* Return type */
+//            LLModel,      /* Parent class */
+//            isModelLoaded,          /* Name of function in C++ (must match Python name) */
+////            modelPath, fin,     /* Argument(s) */
+//        );
+//    }
+//};
+
 PYBIND11_MODULE(_pyllamacpp, m) {
     m.doc() = R"pbdoc(
         PyLlamaCpp: Python binding to llama.cpp
@@ -604,7 +642,9 @@ PYBIND11_MODULE(_pyllamacpp, m) {
         .def_readwrite("interactive", &gpt_params::interactive)
         .def_readwrite("interactive_start", &gpt_params::interactive_start)
         .def_readwrite("verbose_prompt", &gpt_params::verbose_prompt)
-        .def_readwrite("antiprompt", &gpt_params::antiprompt);
+        .def_readwrite("antiprompt", &gpt_params::antiprompt)
+        .def_readwrite("ignore_eos", &gpt_params::ignore_eos)
+        .def_readwrite("instruct", &gpt_params::instruct);
 
     py::class_<llama_context_wrapper>(m,"llama_context");
 
@@ -658,6 +698,18 @@ PYBIND11_MODULE(_pyllamacpp, m) {
     m.def("llama_print_system_info", &llama_print_system_info);
 
     m.def("llama_generate", &llama_generate);
+
+    //////////////////////////////////////////////
+    // gptj
+//    py::class_<LLModel>(m, "LLModel")
+////      .def(py::init([]() { return new LLModel(); } /* no alias needed */,
+////        .def("loadModel", &LLModel::loadModel)
+////        .def("isModelLoaded", &LLModel::isModelLoaded)
+//        .def_readwrite("PromptContext", &LLModel::PromptContext)
+//        ;
+//     py::class_<LLModel, PyLLModel /* <--- trampoline*/>(m, "LLModel")
+//        .def(py::init<>())
+//        .def("loadModel", &LLModel::loadModel);
 
 
 

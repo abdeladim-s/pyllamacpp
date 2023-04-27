@@ -4,7 +4,8 @@
  * @author  [abdeladim-s](https://github.com/abdeladim-s)
  * @date    2023
  * @brief   Python bindings for [llama.cpp](https://github.com/ggerganov/llama.cpp) using Pybind11
- *
+ * @brief   llama.cpp is licensed under MIT Copyright (c) 2023 Georgi Gerganov,
+            please see [llama.cpp License](./llama.cpp_LICENSE)
  * @par
  * COPYRIGHT NOTICE: (c) 2023.
  ********************************************************************************

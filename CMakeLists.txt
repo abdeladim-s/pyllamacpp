@@ -6,6 +6,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
 add_subdirectory(pybind11)
 add_subdirectory(llama.cpp)
+# add_subdirectory(ggml)
 
 file (GLOB CPP_FILES "llama.cpp/*.cpp")
 file (GLOB C_FILES "llama.cpp/*.c")

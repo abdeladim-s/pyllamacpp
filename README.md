@@ -1,5 +1,6 @@
 # PyLLaMACpp
-Official supported Python bindings for [llama.cpp](https://github.com/ggerganov/llama.cpp) + gpt4all
+
+Python bindings for [llama.cpp](https://github.com/ggerganov/llama.cpp)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![PyPi version](https://badgen.net/pypi/v/pyllamacpp)](https://pypi.org/project/pyllamacpp/)
@@ -21,15 +22,18 @@ For those who don't know, `llama.cpp` is a port of Facebook's LLaMA model in pur
 # Table of contents
 <!-- TOC -->
 * [Installation](#installation)
-* [Usage](#usage)
-* [Supported model](#supported-model)
-    * [GPT4All](#gpt4all)
+* [CLI](#cli)
+* [Tutorial](#tutorial)
+    * [Quick start](#quick-start)
+    * [Interactive Dialogue](#interactive-dialogue)
+    * [Different persona](#different-persona)
+* [Supported models](#supported-models)
 * [Discussions and contributions](#discussions-and-contributions)
 * [License](#license)
 <!-- TOC -->
 
 # Installation
-1. The easy way is to use the prebuilt wheels
+1. The easy way is to install the prebuilt wheels
 ```bash
 pip install pyllamacpp
 ```
@@ -42,82 +46,145 @@ git clone --recursive https://github.com/nomic-ai/pyllamacpp && cd pyllamacpp
 pip install .
 ```
 
-# Usage
+# CLI 
 
+You can run the flowering simple command line interface to test the package once it is installed:
+
+```shell
+pyllamacpp path/to/ggml/model
+```
+
+```shell
+pyllamacpp -h
+
+usage: pyllamacpp [-h] [--n_ctx N_CTX] [--n_parts N_PARTS] [--seed SEED] [--f16_kv F16_KV] [--logits_all LOGITS_ALL]
+                  [--vocab_only VOCAB_ONLY] [--use_mlock USE_MLOCK] [--embedding EMBEDDING] [--n_predict N_PREDICT] [--n_threads N_THREADS]
+                  [--repeat_last_n REPEAT_LAST_N] [--top_k TOP_K] [--top_p TOP_P] [--temp TEMP] [--repeat_penalty REPEAT_PENALTY]
+                  [--n_batch N_BATCH]
+                  model
+
+positional arguments:
+  model                 The path of the model file
+
+options:
+  -h, --help            show this help message and exit
+  --n_ctx N_CTX         text context
+  --n_parts N_PARTS
+  --seed SEED           RNG seed
+  --f16_kv F16_KV       use fp16 for KV cache
+  --logits_all LOGITS_ALL
+                        the llama_eval() call computes all logits, not just the last one
+  --vocab_only VOCAB_ONLY
+                        only load the vocabulary, no weights
+  --use_mlock USE_MLOCK
+                        force system to keep model in RAM
+  --embedding EMBEDDING
+                        embedding mode only
+  --n_predict N_PREDICT
+                        Number of tokens to predict
+  --n_threads N_THREADS
+                        Number of threads
+  --repeat_last_n REPEAT_LAST_N
+                        Last n tokens to penalize
+  --top_k TOP_K         top_k
+  --top_p TOP_P         top_p
+  --temp TEMP           temp
+  --repeat_penalty REPEAT_PENALTY
+                        repeat_penalty
+  --n_batch N_BATCH     batch size for prompt processing
+
+```
+# Tutorial
+
+### Quick start
 A simple `Pythonic` API is built on top of `llama.cpp` C/C++ functions. You can call it from Python as follows:
 
 ```python
 from pyllamacpp.model import Model
 
-def new_text_callback(text: str):
-    print(text, end="", flush=True)
-
-model = Model(ggml_model='./models/gpt4all-model.bin', n_ctx=512)
-model.generate("Once upon a time, ", n_predict=55, new_text_callback=new_text_callback, n_threads=8)
+model = Model(ggml_model='./models/gpt4all-model.bin')
+for token in model.generate("Tell me a joke ?"):
+    print(token, end='')
 ```
-If you don't want to use the `callback`, you can get the results from the `generate` method once the inference is finished:
+
+### Interactive Dialogue
+You can set up an interactive dialogue by simply keeping the `model` variable alive:
 
 ```python
-generated_text = model.generate("Once upon a time, ", n_predict=55)
-print(generated_text)
-```
-
-## Interactive Mode
-
-If you want to run the program in interactive mode you can add the `grab_text_callback` function and set `interactive` to True in the generate function. `grab_text_callback` should always return a string unless you wish to signal EOF in which case you should return None.
-
-```py
 from pyllamacpp.model import Model
 
-def new_text_callback(text: str):
-    print(text, end="", flush=True)
+model = Model(ggml_model='./models/gpt4all-model.bin')
+while True:
+    try:
+        prompt = input("You: ", flush=True)
+        if prompt == '':
+            continue
+        print(f"AI:", end='')
+        for tok in model.generate(prompt):
+            print(f"{tok}", end='', flush=True)
+        print()
+    except KeyboardInterrupt:
+        break
+```
+### Different persona
+You can customize the `prompt_context` to _"give the language model a different persona"_ as follows:
 
-def grab_text_callback():
-    inpt = input()
-    # To signal EOF, return None
-    if inpt == "END":
-        return None
-    return inpt
+```python
+from pyllamacpp.model import Model
 
-model = Model(ggml_model='./models/gpt4all-model.bin', n_ctx=512)
+prompt_context = """ Act as Bob. Bob is helpful, kind, honest, good at writing, and never fails to answer the User's requests immediately and with precision. To do this, Bob uses a database of information collected from many different sources, including books, journals, online articles, and more.
 
-# prompt from https://github.com/ggerganov/llama.cpp/blob/master/prompts/chat-with-bob.txt
-prompt = """
-Transcript of a dialog, where the User interacts with an Assistant named Bob. Bob is helpful, kind, honest, good at writing, and never fails to answer the User's requests immediately and with precision. To do this, Bob uses a database of information collected from many different sources, including books, journals, online articles, and more.
+User: Nice to meet you Bob!
+Bob: Welcome! I'm here to assist you with anything you need. What can I do for you today?
+"""
 
-User: Hello, Bob.
-Bob: Hello. How may I help you today?
-User: Please tell me the largest city in Europe.
-Bob: Sure. The largest city in Europe is Moscow, the capital of Russia.
-User:"""
+prompt_prefix = "\n User:"
+prompt_suffix = "\n Bob:"
 
-model.generate(prompt, n_predict=256, new_text_callback=new_text_callback, grab_text_callback=grab_text_callback, interactive=True, repeat_penalty=1.0, antiprompt=["User:"])
+model = Model(ggml_model=model, n_ctx=512, prompt_context=prompt_context, prompt_prefix=prompt_prefix,
+              prompt_suffix=prompt_suffix)
+
+while True:
+    try:
+        prompt = input("You: ")
+        if prompt == '':
+            continue
+        print(f"Bob:", end='')
+        for tok in model.generate(prompt):
+            print(f"{tok}", end='', flush=True)
+        print()
+    except KeyboardInterrupt:
+        break
+
 ```
 
-* You can pass any `llama context` [parameter](https://nomic-ai.github.io/pyllamacpp/#pyllamacpp.constants.LLAMA_CONTEXT_PARAMS_SCHEMA) as a keyword argument to the `Model` class
-* You can pass any `gpt` [parameter](https://nomic-ai.github.io/pyllamacpp/#pyllamacpp.constants.GPT_PARAMS_SCHEMA) as a keyword argument to the `generarte` method
-* You can always refer to the [short documentation](https://nomic-ai.github.io/pyllamacpp/) for more details.
+
+You can always refer to the [short documentation](https://abdeladim-s.github.io/pyllamacpp/) for more details.
 
 
-# Supported model
+# Supported models
 
-### GPT4All
+Fully tested with [GPT4All](https://github.com/nomic-ai/gpt4all) model, see [PyGPT4All](https://github.com/nomic-ai/pygpt4all).
 
-Download a GPT4All model from https://the-eye.eu/public/AI/models/nomic-ai/gpt4all/.
-The easiest approach is download a file whose name ends in `ggml.bin`--older model versions require conversion.
+But all models supported by `llama.cpp` should be supported as well:
 
-If you have an older model downloaded that you want to convert, in your terminal run: 
-```shell
-pyllamacpp-convert-gpt4all path/to/gpt4all_model.bin path/to/llama_tokenizer path/to/gpt4all-converted.bin
-```
+<blockquote>
 
-# FAQs
-* Where to find the llama tokenizer? [#5](https://github.com/nomic-ai/pyllamacpp/issues/5)
+**Supported models:**
+
+- [X] LLaMA 🦙
+- [X] [Alpaca](https://github.com/ggerganov/llama.cpp#instruction-mode-with-alpaca)
+- [X] [Chinese LLaMA / Alpaca](https://github.com/ymcui/Chinese-LLaMA-Alpaca)
+- [X] [Vigogne (French)](https://github.com/bofenghuang/vigogne)
+- [X] [Vicuna](https://github.com/ggerganov/llama.cpp/discussions/643#discussioncomment-5533894)
+- [X] [Koala](https://bair.berkeley.edu/blog/2023/04/03/koala/)
+
+</blockquote>
 
 # Discussions and contributions
-If you find any bug, please open an [issue](https://github.com/nomic-ai/pyllamacpp/issues).
+If you find any bug, please open an [issue](https://github.com/abdeladim-s/pyllamacpp/issues).
 
-If you have any feedback, or you want to share how you are using this project, feel free to use the [Discussions](https://github.com/nomic-ai/pyllamacpp/discussions) and open a new topic.
+If you have any feedback, or you want to share how you are using this project, feel free to use the [Discussions](https://github.com/abdeladim-s/pyllamacpp/discussions) and open a new topic.
 
 # License
 

@@ -25,9 +25,9 @@ LLAMA_CONTEXT_PARAMS_SCHEMA = {
     },
     'seed': {
         'type': int,
-        'description': "RNG seed, 0 for random",
+        'description': "RNG seed",
         'options': None,
-        'default': 0
+        'default': -1
     },
     'f16_kv': {
         'type': bool,
@@ -62,12 +62,6 @@ LLAMA_CONTEXT_PARAMS_SCHEMA = {
 }
 
 GPT_PARAMS_SCHEMA = {
-    'seed': {
-            'type': int,
-            'description': "RNG seed",
-            'options': None,
-            'default': -1
-    },
     'n_predict': {
             'type': int,
             'description': "Number of tokens to predict",
@@ -118,3 +112,8 @@ GPT_PARAMS_SCHEMA = {
             'default': True
     }
 }
+
+PROMPT_CONTEXT = "Below is an instruction that describes a task. Write a response that appropriately completes the " \
+                 "request\n"
+PROMPT_PREFIX = "\n\n##Instruction:\n"
+PROMPT_SUFFIX = "\n\n##Response:\n"

@@ -131,9 +131,9 @@ long_description = (this_directory / "README.md").read_text()
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="pyllamacpp",
-    version="1.0.7",
-    author="abdeladim-s",
-    description="Python bindings for llama.cpp + gpt4all",
+    version="2.0.0",
+    author="Abdeladim Sadiki",
+    description="Python bindings for llama.cpp",
     long_description=long_description,
     ext_modules=[CMakeExtension("_pyllamacpp")],
     cmdclass={"build_ext": CMakeBuild},
@@ -145,14 +145,13 @@ setup(
     long_description_content_type="text/markdown",
     license='MIT',
     entry_points={
-        'console_scripts': ['pyllamacpp-webui=pyllamacpp.webui:run',
-                            'pyllamacpp-convert-gpt4all=pyllamacpp.scripts.convert_gpt4all:main']
+        'console_scripts': ['pyllamacpp=pyllamacpp.cli:main']
     },
     project_urls={
-        'Documentation': 'https://nomic-ai.github.io/pyllamacpp',
-        'Source': 'https://github.com/nomic-ai/pyllamacpp',
-        'Tracker': 'https://github.com/nomic-ai/pyllamacpp/issues',
+        'Documentation': 'https://abdeladim-s.github.io/pyllamacpp',
+        'Source': 'https://github.com/abdeladim-s/pyllamacpp',
+        'Tracker': 'https://github.com/abdeladim-s/pyllamacpp/issues',
     },
-    install_requires=[],
-    extras_require={"all": ["streamlit", "streamlit-ace", "sentencepiece", "torch"]},
+    # install_requires=[],
+    # extras_require={},
 )
