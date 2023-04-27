@@ -1,6 +1,6 @@
 # PyLLaMACpp
 
-Python bindings for [llama.cpp](https://github.com/ggerganov/llama.cpp)
+* Python bindings for [llama.cpp](https://github.com/ggerganov/llama.cpp) + backend for [GPT4All](https://github.com/nomic-ai/pygpt4all) LLaMA models.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![PyPi version](https://badgen.net/pypi/v/pyllamacpp)](https://pypi.org/project/pyllamacpp/)
