@@ -48,7 +48,7 @@ pip install .
 
 # CLI 
 
-You can run the flowering simple command line interface to test the package once it is installed:
+You can run the following simple command line interface to test the package once it is installed:
 
 ```shell
 pyllamacpp path/to/ggml/model
