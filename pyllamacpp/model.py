@@ -286,26 +286,3 @@ class Model:
     def __del__(self):
         if self._ctx:
             pp.llama_free(self._ctx)
-
-
-if __name__ == '__main__':
-    model = '/home/su/Downloads/gpt4all/gpt4all-lora-quantized-converted.bin'
-    # model = "/opt/gpt4all-chat 0.1.0/bin/ggml-model-q4_0.bin"
-    prompt = """
-Below is an instruction that describes a task. Write a response that appropriately completes the request.
-
-## Instruction:
-what time is it ?
-## Response:
-it is 9:30 AM.
-
-
-##Instruction:
-what time is it ?
-##Response:
-it is 9:30 AM.
-    """
-    model = Model(ggml_model=model, log_level=logging.INFO, anti_prompts=['##Instruction'])
-    for token in model.generate(prompt, infinite_generation=True):
-        print(token, end='')
-        sys.stdout.flush()
