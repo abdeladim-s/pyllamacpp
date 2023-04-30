@@ -137,7 +137,7 @@ class Model:
         :param verbose: if `True`, `llama.cpp` stuff will be printed
         :return: Tokens generator
         """
-        prompt = f' {self.prompt_prefix}{prompt}{self.prompt_suffix}'
+        prompt = f'{self.prompt_prefix}{prompt}{self.prompt_suffix}'
         input_tokens = pp.llama_tokenize(self._ctx, prompt, True)
         if len(input_tokens) > self._n_ctx - 4:
             raise Exception('Prompt too long!')
