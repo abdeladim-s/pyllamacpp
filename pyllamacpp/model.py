@@ -75,7 +75,7 @@ class Model:
 
         self._n_ctx = pp.llama_n_ctx(self._ctx)
         self._last_n_tokens = [0] * self._n_ctx  # n_ctx elements
-        self._n_past = 0
+        self.n_consumed_tokens = 0
         self.prompt_cntext = prompt_context
         self.prompt_prefix = prompt_prefix
         self.prompt_suffix = prompt_suffix
@@ -83,15 +83,33 @@ class Model:
 
         self._prompt_context_tokens = []
         self._prompt_prefix_tokens = []
+        self._prompt_suffix_tokens = []
 
         self.reset()
 
     def reset(self):
         self._prompt_context_tokens = pp.llama_tokenize(self._ctx, self.prompt_cntext, True)
         self._prompt_prefix_tokens = pp.llama_tokenize(self._ctx, self.prompt_prefix, True)
+        self._prompt_suffix_tokens = pp.llama_tokenize(self._ctx, self.prompt_suffix, True)
         self.anti_prompts.append(self.prompt_prefix)
-        self._last_n_tokens = [0] * self._n_ctx  # n_ctx elements
-        self._n_past = 0
+        self._last_n_tokens = [0] * (self._n_ctx-len(self._prompt_context_tokens))  # n_ctx elements
+        self.n_consumed_tokens = 0
+
+    def tokenize(self, text:str):
+        """
+        Returns a list of tokens for the text
+        :param text: text to be tokenized
+        :return: List of tokens
+        """
+        return pp.llama_tokenize(self._ctx, text, True)
+
+    def untokenize(self, tokens:list):
+        """
+        Returns a list of tokens for the text
+        :param text: text to be tokenized
+        :return: A string representing the text extracted from the tokens
+        """
+        return pp.llama_tokens_to_str(self._ctx, tokens)
 
     def _is_anti_prompt(self, predicted_word: str) -> Tuple[bool, Union[None, str]]:
         """
@@ -137,19 +155,11 @@ class Model:
         :param verbose: if `True`, `llama.cpp` stuff will be printed
         :return: Tokens generator
         """
-        prompt = f' {self.prompt_prefix}{prompt}{self.prompt_suffix}'
-        input_tokens = pp.llama_tokenize(self._ctx, prompt, True)
-        if len(input_tokens) > self._n_ctx - 4:
+        input_tokens = self._prompt_prefix_tokens + pp.llama_tokenize(self._ctx, prompt, True) + self._prompt_suffix_tokens
+        if len(input_tokens) > self._n_ctx - 4 - len(self._prompt_context_tokens):
             raise Exception('Prompt too long!')
-        predicted_tokens = []
-        predicted_token = 0
-
-        # add global context for the first time
-        if self._n_past == 0:
-            for tok in self._prompt_context_tokens:
-                predicted_tokens.append(tok)
-                self._last_n_tokens.pop(0)
-                self._last_n_tokens.append(tok)
+        predicted_tokens = self._prompt_context_tokens.copy()
+        predicted_token = len(predicted_tokens)
 
         # consume input tokens
         for tok in input_tokens:
@@ -158,28 +168,41 @@ class Model:
             self._last_n_tokens.append(tok)
 
         predicted_word = ""
-        n_remain = 0
-
         tokens_queue = []
+        self.n_consumed_tokens = 0
 
         while infinite_generation or predicted_token != pp.llama_token_eos():
             if len(predicted_tokens) > 0:
                 if (pp.llama_eval(self._ctx,
                                   predicted_tokens,
                                   len(predicted_tokens),
-                                  self._n_past,
+                                  self.n_consumed_tokens,
                                   n_threads)):
                     raise Exception("failed to eval the model!")
-                self._n_past += len(predicted_tokens)
+                self.n_consumed_tokens += len(predicted_tokens)
                 predicted_tokens.clear()
 
+            input_prompt = self._prompt_context_tokens + self._last_n_tokens[self._n_ctx - self.n_consumed_tokens:]
+            """
+            # For debug
+            print('--------------------- prompt ----------------------')
+            prmpt = pp.llama_tokens_to_str(self._ctx, input_prompt)
+            print(prmpt)
+            print()
+            print('--------------------- pred ----------------------')
+            print(pp.llama_tokens_to_str(self._ctx, predicted_tokens))
+            print()
+
+            """
+            # The context should stay fixed and never vanish
             predicted_token = pp.llama_sample_top_p_top_k(self._ctx,
-                                                          self._last_n_tokens[self._n_ctx - repeat_last_n:],
-                                                          repeat_last_n,
+                                                          input_prompt[self._n_ctx - repeat_last_n:],
+                                                          self.n_consumed_tokens+len(self._prompt_context_tokens),
                                                           top_k,
                                                           top_p,
                                                           temp,
                                                           repeat_penalty)
+            
 
             predicted_tokens.append(predicted_token)
             token_str = pp.llama_token_to_str(self._ctx, predicted_token)
@@ -203,10 +226,10 @@ class Model:
                 yield token_str
 
             if n_predict is not None:
-                if n_remain == n_predict:
+                if self.n_consumed_tokens == n_predict:
                     break
                 else:
-                    n_remain += 1
+                    self.n_consumed_tokens += 1
     @staticmethod
     def _set_params(params, kwargs: dict) -> None:
         """
