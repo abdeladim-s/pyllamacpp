@@ -103,7 +103,8 @@ class Model:
 
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
+        """Resets the context"""
         self._prompt_context_tokens = pp.llama_tokenize(self._ctx, self.prompt_cntext, True)
         self._prompt_prefix_tokens = pp.llama_tokenize(self._ctx, self.prompt_prefix, True)
         self._prompt_suffix_tokens = pp.llama_tokenize(self._ctx, self.prompt_suffix, True)
@@ -200,7 +201,6 @@ class Model:
                         while len(sequence_queue) != 0:
                             yield sequence_queue.pop(0)
                         sequence_queue = []
-
             self._last_n_tokens.pop(0)
             self._last_n_tokens.append(predicted_token)
             yield token_str
