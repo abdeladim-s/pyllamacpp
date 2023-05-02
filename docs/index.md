@@ -1,4 +1,4 @@
-# PyLLaMaCpp API Reference
+# PyLLaMACpp API Reference
 
 
 ::: pyllamacpp.model
