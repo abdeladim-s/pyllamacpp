@@ -167,14 +167,6 @@ while True:
     break
 ```
 
-# Advanced usage
-For advanced users, you can access the [llama.cpp C-API](https://github.com/ggerganov/llama.cpp/blob/master/llama.h) functions directly to make your own logic.
-All functions from `llama.h` are exposed with the binding module `_pyllamacpp`.
-
-# API reference
-You can check the [API reference documentation](https://abdeladim-s.github.io/pyllamacpp/) for more details.
-
-
 # Supported models
 
 Fully tested with [GPT4All](https://github.com/nomic-ai/gpt4all) model, see [PyGPT4All](https://github.com/nomic-ai/pygpt4all).
@@ -193,6 +185,14 @@ But all models supported by `llama.cpp` should be supported as well:
 - [X] [Koala](https://bair.berkeley.edu/blog/2023/04/03/koala/)
 
 </blockquote>
+
+# Advanced usage
+For advanced users, you can access the [llama.cpp C-API](https://github.com/ggerganov/llama.cpp/blob/master/llama.h) functions directly to make your own logic.
+All functions from `llama.h` are exposed with the binding module `_pyllamacpp`.
+
+# API reference
+You can check the [API reference documentation](https://abdeladim-s.github.io/pyllamacpp/) for more details.
+
 
 # Discussions and contributions
 If you find any bug, please open an [issue](https://github.com/abdeladim-s/pyllamacpp/issues).
