@@ -167,6 +167,10 @@ while True:
     break
 ```
 
+# Advanced usage
+For advanced users, you can access the [llama.cpp C-API](https://github.com/ggerganov/llama.cpp/blob/master/llama.h) functions directly to make your own logic.
+All functions from `llama.h` are exposed with the binding module `_pyllamacpp`.
+
 # API reference
 You can check the [API reference documentation](https://abdeladim-s.github.io/pyllamacpp/) for more details.
 
