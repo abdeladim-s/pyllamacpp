@@ -131,7 +131,7 @@ long_description = (this_directory / "README.md").read_text()
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="pyllamacpp",
-    version="2.0.0",
+    version="2.1.0",
     author="Abdeladim Sadiki",
     description="Python bindings for llama.cpp",
     long_description=long_description,
@@ -152,6 +152,4 @@ setup(
         'Source': 'https://github.com/abdeladim-s/pyllamacpp',
         'Tracker': 'https://github.com/abdeladim-s/pyllamacpp/issues',
     },
-    # install_requires=[],
-    # extras_require={},
 )

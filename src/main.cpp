@@ -198,12 +198,13 @@ std::string gpt_random_prompt(std::mt19937 & rng) {
 
 // quick and dirty implementation! just copied from main.cpp with some minor changes
 // Needs lots of improvements
-int llama_generate(struct llama_context_wrapper * ctx_w, gpt_params params, py::function new_text_callback, bool verbose){
+int llama_generate(struct llama_context_wrapper * ctx_w, gpt_params params, py::function new_text_callback){
 
     if (params.perplexity) {
         printf("\n************\n");
         printf("%s: please use the 'perplexity' tool for perplexity calculations\n", __func__);
         printf("************\n\n");
+
 
         return 0;
     }

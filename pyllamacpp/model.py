@@ -7,7 +7,7 @@ This module contains a simple Python API around [llama.cpp](https://github.com/g
 
 import logging
 from pathlib import Path
-from typing import Callable, Tuple, Union
+from typing import Callable, Tuple, Union, List, Generator
 import pyllamacpp.constants as constants
 from pyllamacpp._logger import set_log_level
 
@@ -17,7 +17,6 @@ __copyright__ = "Copyright 2023, "
 __license__ = "MIT"
 
 import logging
-import sys
 import _pyllamacpp as pp
 
 
@@ -28,7 +27,6 @@ class Model:
     Example usage
     ```python
     from pyllamacpp.model import Model
-    import sys
 
     model = Model(ggml_model='./models/ggml-model-f16-q4_0.bin')
     for token in model.generate("Tell me a joke ?"):
@@ -38,35 +36,54 @@ class Model:
     _new_text_callback = None
 
     def __init__(self,
-                 ggml_model: str,
-                 prompt_context=constants.PROMPT_CONTEXT,
-                 prompt_prefix=constants.PROMPT_PREFIX,
-                 prompt_suffix=constants.PROMPT_SUFFIX,
-                 anti_prompts=[],
+                 model_path: str,
+                 prompt_context='',
+                 prompt_prefix='',
+                 prompt_suffix='',
                  log_level: int = logging.ERROR,
-                 **llama_params):
+                 n_ctx: int = 512,
+                 seed: int = 0,
+                 n_parts: int = -1,
+                 f16_kv: bool = False,
+                 logits_all: bool = False,
+                 vocab_only: bool = False,
+                 use_mlock: bool = False,
+                 embedding: bool = False):
         """
-        :param ggml_model: the path to the ggml model
-        :param prompt_context: the global context of the interaction, default to [PROMPT_CONTEXT](/pyllamacpp/#pyllamacpp.constants.PROMPT_CONTEXT)
-        :param prompt_prefix: the prompt prefix, default to [PROMPT_PREFIX](/pyllamacpp/#pyllamacpp.constants.PROMPT_PREFIX)
-        :param prompt_suffix: the prompt suffix, default to [PROMPT_SUFFIX](/pyllamacpp/#pyllamacpp.constants.PROMPT_SUFFIX)
-        :param anti_prompts: The inference will stop if an anti_prompt is detected, it will always contain the `prompt_prefix`
+        :param model_path: the path to the ggml model
+        :param prompt_context: the global context of the interaction
+        :param prompt_prefix: the prompt prefix
+        :param prompt_suffix: the prompt suffix
         :param log_level: logging level, set to INFO by default
-        :param llama_params: keyword arguments for different whisper.cpp parameters,
-                        see [PARAMS_SCHEMA](/pyllamacpp/#pyllamacpp.constants.LLAMA_CONTEXT_PARAMS_SCHEMA)
+        :param n_ctx: LLaMA context
+        :param seed: random seed
+        :param n_parts: LLaMA n_parts
+        :param f16_kv: use fp16 for KV cache
+        :param logits_all: the llama_eval() call computes all logits, not just the last one
+        :param vocab_only: only load the vocabulary, no weights
+        :param use_mlock: force system to keep model in RAM
+        :param embedding: embedding mode only
         """
+
         # set logging level
         set_log_level(log_level)
         self._ctx = None
 
-        if not Path(ggml_model).is_file():
-            raise Exception(f"File {ggml_model} not found!")
+        if not Path(model_path).is_file():
+            raise Exception(f"File {model_path} not found!")
 
         self.llama_params = pp.llama_context_default_params()
         # update llama_params
-        self._set_params(self.llama_params, llama_params)
+        self.llama_params.n_ctx = n_ctx
+        self.llama_params.seed = seed
+        self.llama_params.n_parts = n_parts
+        self.llama_params.f16_kv = f16_kv
+        self.llama_params.logits_all = logits_all
+        self.llama_params.vocab_only = vocab_only
+        self.llama_params.use_mlock = use_mlock
+        self.llama_params.embedding = embedding
 
-        self._ctx = pp.llama_init_from_file(ggml_model, self.llama_params)
+        self._ctx = pp.llama_init_from_file(model_path, self.llama_params)
 
         # gpt params
         self.gpt_params = pp.gpt_params()
@@ -79,48 +96,30 @@ class Model:
         self.prompt_cntext = prompt_context
         self.prompt_prefix = prompt_prefix
         self.prompt_suffix = prompt_suffix
-        self.anti_prompts = anti_prompts
 
         self._prompt_context_tokens = []
         self._prompt_prefix_tokens = []
+        self._prompt_suffix_tokens = []
 
         self.reset()
 
     def reset(self):
         self._prompt_context_tokens = pp.llama_tokenize(self._ctx, self.prompt_cntext, True)
         self._prompt_prefix_tokens = pp.llama_tokenize(self._ctx, self.prompt_prefix, True)
-        self.anti_prompts.append(self.prompt_prefix)
+        self._prompt_suffix_tokens = pp.llama_tokenize(self._ctx, self.prompt_suffix, True)
         self._last_n_tokens = [0] * self._n_ctx  # n_ctx elements
         self._n_past = 0
-
-    def _is_anti_prompt(self, predicted_word: str) -> Tuple[bool, Union[None, str]]:
-        """
-        Returns True if an anti_prompt is detected
-        :param predicted_word: the predicted word
-        :return: Tuple[bool, Union[str, None]]
-        """
-        if predicted_word == '':
-            return False, None
-        for word in self.anti_prompts:
-            if word.startswith(predicted_word):
-                if word == predicted_word:
-                    return True, None
-                else:
-                    return True, predicted_word
-
-        return False, word
 
     def generate(self,
                  prompt: str,
                  n_predict: Union[None, int] = None,
                  infinite_generation: bool = False,
                  n_threads: int = 4,
-                 repeat_last_n: int = 128,
+                 repeat_last_n: int = 64,
                  top_k: int = 40,
                  top_p: float = 0.95,
                  temp: float = 0.8,
-                 repeat_penalty: float = 1.10,
-                 verbose: bool = True):
+                 repeat_penalty: float = 1.10) -> Generator:
         """
         Runs llama.cpp inference and yields new predicted tokens from the prompt provided as input
 
@@ -134,11 +133,10 @@ class Model:
         :param top_p: top P sampling parameter
         :param temp: temperature
         :param repeat_penalty: repeat penalty sampling parameter
-        :param verbose: if `True`, `llama.cpp` stuff will be printed
         :return: Tokens generator
         """
-        prompt = f'{self.prompt_prefix}{prompt}{self.prompt_suffix}'
-        input_tokens = pp.llama_tokenize(self._ctx, prompt, True)
+        input_tokens = self._prompt_prefix_tokens + pp.llama_tokenize(self._ctx, prompt,
+                                                                      True) + self._prompt_suffix_tokens
         if len(input_tokens) > self._n_ctx - 4:
             raise Exception('Prompt too long!')
         predicted_tokens = []
@@ -157,10 +155,7 @@ class Model:
             self._last_n_tokens.pop(0)
             self._last_n_tokens.append(tok)
 
-        predicted_word = ""
         n_remain = 0
-
-        tokens_queue = []
 
         while infinite_generation or predicted_token != pp.llama_token_eos():
             if len(predicted_tokens) > 0:
@@ -183,30 +178,15 @@ class Model:
 
             predicted_tokens.append(predicted_token)
             token_str = pp.llama_token_to_str(self._ctx, predicted_token)
-            predicted_word = predicted_word + token_str
-            anti_prompt_flag, previous_word = self._is_anti_prompt(predicted_word)
-            if anti_prompt_flag and previous_word is None:
-                logging.info(f'Anti prompt {predicted_word} detected'.strip())
-                break
-            elif anti_prompt_flag and previous_word is not None:
-                predicted_word = previous_word
-                tokens_queue.append(token_str)
-                continue
-            else:
-                self._last_n_tokens.pop(0)
-                self._last_n_tokens.append(predicted_token)
-                predicted_word = token_str
-                # consume tokens_queue first
-                while len(tokens_queue) != 0:
-                    yield tokens_queue.pop(0)
-
-                yield token_str
-
+            self._last_n_tokens.pop(0)
+            self._last_n_tokens.append(predicted_token)
+            yield token_str
             if n_predict is not None:
                 if n_remain == n_predict:
                     break
                 else:
                     n_remain += 1
+
     @staticmethod
     def _set_params(params, kwargs: dict) -> None:
         """
@@ -227,32 +207,67 @@ class Model:
         # save res
         self.res += text
 
-    def _generate(self, prompt: str,
-                 n_predict: int = 128,
-                 new_text_callback: Callable[[str], None] = None,
-                 verbose: bool = False,
-                 **gpt_params) -> str:
+    def cpp_generate(self, prompt: str,
+                     n_predict: int = 128,
+                     new_text_callback: Callable[[str], None] = None,
+                     n_threads: int = 4,
+                     repeat_last_n: int = 64,
+                     top_k: int = 40,
+                     top_p: float = 0.95,
+                     temp: float = 0.8,
+                     repeat_penalty: float = 1.10,
+                     n_batch: int = 8,
+                     n_keep: int = 0,
+                     interactive: bool = False,
+                     antiprompt: List = [],
+                     ignore_eos: bool = False,
+                     instruct: bool = False,
+                     verbose_prompt: bool = False,
+                     ) -> str:
         """
-        Runs llama.cpp inference to generate new text content from the prompt provided as input
+        The generate function from `llama.cpp`
 
         :param prompt: the prompt
         :param n_predict: number of tokens to generate
         :param new_text_callback: a callback function called when new text is generated, default `None`
-        :param verbose: print some info about the inference
-        :param gpt_params: any other llama.cpp params see [PARAMS_SCHEMA](/pyllamacpp/#pyllamacpp.constants.GPT_PARAMS_SCHEMA)
+        :param n_threads: The number of CPU threads
+        :param repeat_last_n: last n tokens to penalize
+        :param top_k: top K sampling parameter
+        :param top_p: top P sampling parameter
+        :param temp: temperature
+        :param repeat_penalty: repeat penalty sampling parameter
+        :param n_batch: GPT params n_batch
+        :param n_keep: GPT params n_keep
+        :param interactive: interactive communication
+        :param antiprompt: list of anti prompts
+        :param ignore_eos: Ignore LLaMA EOS
+        :param instruct: Activate instruct mode
+        :param verbose_prompt: verbose prompt
         :return: the new generated text
         """
         self.gpt_params.prompt = prompt
         self.gpt_params.n_predict = n_predict
         # update other params if any
-        self._set_params(self.gpt_params, gpt_params)
+        self.gpt_params.n_threads = n_threads
+        self.gpt_params.repeat_last_n = repeat_last_n
+        self.gpt_params.top_k = top_k
+        self.gpt_params.top_p = top_p
+        self.gpt_params.temp = temp
+        self.gpt_params.repeat_penalty = repeat_penalty
+        self.gpt_params.n_batch = n_batch
+        self.gpt_params.n_keep = n_keep
+        self.gpt_params.interactive = interactive
+        self.gpt_params.antiprompt = antiprompt
+        self.gpt_params.ignore_eos = ignore_eos
+        self.gpt_params.instruct = instruct
+        self.gpt_params.verbose_prompt = verbose_prompt
 
         # assign new_text_callback
         self.res = ""
         Model._new_text_callback = new_text_callback
 
         # run the prediction
-        pp.llama_generate(self._ctx, self.gpt_params, self._call_new_text_callback, verbose)
+        pp.llama_generate(self._ctx, self.gpt_params, self._call_new_text_callback)
         return self.res
 
     @staticmethod
@@ -267,14 +282,6 @@ class Model:
                 continue
             res[param] = getattr(params, param)
         return res
-
-    @staticmethod
-    def get_params_schema() -> dict:
-        """
-        A simple link to [PARAMS_SCHEMA](/pyllamacpp/#pyllamacpp.constants.PARAMS_SCHEMA)
-        :return: dict of params schema
-        """
-        return constants.GPT_PARAMS_SCHEMA
 
     def llama_print_timings(self):
         pp.llama_print_timings(self._ctx)

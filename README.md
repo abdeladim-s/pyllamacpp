@@ -1,9 +1,13 @@
 # PyLLaMACpp
-
-* Python bindings for [llama.cpp](https://github.com/ggerganov/llama.cpp) + backend for [GPT4All](https://github.com/nomic-ai/pygpt4all) LLaMA models.
-
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![PyPi version](https://badgen.net/pypi/v/pyllamacpp)](https://pypi.org/project/pyllamacpp/)
+
+Python bindings for [llama.cpp](https://github.com/ggerganov/llama.cpp)
+
+
+<p align="center">
+  <img src="./docs/demo.gif">
+</p>
 
 
 For those who don't know, `llama.cpp` is a port of Facebook's LLaMA model in pure C/C++:
@@ -26,7 +30,8 @@ For those who don't know, `llama.cpp` is a port of Facebook's LLaMA model in pur
 * [Tutorial](#tutorial)
     * [Quick start](#quick-start)
     * [Interactive Dialogue](#interactive-dialogue)
-    * [Different persona](#different-persona)
+    * [Attribute a persona to the language model](#attribute-a-persona-to-the-language-model)
+* [API reference](#api-reference)
 * [Supported models](#supported-models)
 * [Discussions and contributions](#discussions-and-contributions)
 * [License](#license)
@@ -42,8 +47,7 @@ However, the compilation process of `llama.cpp` is taking into account the archi
 so you might need to build it from source:
 
 ```shell
-git clone --recursive https://github.com/nomic-ai/pyllamacpp && cd pyllamacpp
-pip install .
+pip install git+https://github.com/abdeladim-s/pyllamacpp.git
 ```
 
 # CLI 
@@ -62,6 +66,8 @@ usage: pyllamacpp [-h] [--n_ctx N_CTX] [--n_parts N_PARTS] [--seed SEED] [--f16_
                   [--repeat_last_n REPEAT_LAST_N] [--top_k TOP_K] [--top_p TOP_P] [--temp TEMP] [--repeat_penalty REPEAT_PENALTY]
                   [--n_batch N_BATCH]
                   model
+
+This is like a chatbot, You can start the conversation with `Hi, can you help me ?` Pay attention though that it may hallucinate!
 
 positional arguments:
   model                 The path of the model file
@@ -92,8 +98,8 @@ options:
   --repeat_penalty REPEAT_PENALTY
                         repeat_penalty
   --n_batch N_BATCH     batch size for prompt processing
-
 ```
+
 # Tutorial
 
 ### Quick start
@@ -113,7 +119,7 @@ You can set up an interactive dialogue by simply keeping the `model` variable al
 ```python
 from pyllamacpp.model import Model
 
-model = Model(ggml_model='./models/gpt4all-model.bin')
+model = Model(model_path='/path/to/ggml/model')
 while True:
     try:
         prompt = input("You: ", flush=True)
@@ -126,40 +132,62 @@ while True:
     except KeyboardInterrupt:
         break
 ```
-### Different persona
-You can customize the `prompt_context` to _"give the language model a different persona"_ as follows:
+### Attribute a persona to the language model
+
+The following is an example showing how to _"attribute a persona to the language model"_ :
 
 ```python
 from pyllamacpp.model import Model
 
-prompt_context = """ Act as Bob. Bob is helpful, kind, honest, good at writing, and never fails to answer the User's requests immediately and with precision. To do this, Bob uses a database of information collected from many different sources, including books, journals, online articles, and more.
+prompt_context = """Act as Bob. Bob is helpful, kind, honest,
+and never fails to answer the User's requests immediately and with precision. 
 
 User: Nice to meet you Bob!
 Bob: Welcome! I'm here to assist you with anything you need. What can I do for you today?
 """
 
-prompt_prefix = "\n User:"
-prompt_suffix = "\n Bob:"
+prompt_prefix = "\nUser:"
+prompt_suffix = "\nBob:"
 
-model = Model(ggml_model=model, n_ctx=512, prompt_context=prompt_context, prompt_prefix=prompt_prefix,
+model = Model(model_path='/path/to/ggml/model', 
+              prompt_context=prompt_context, 
+              prompt_prefix=prompt_prefix,
               prompt_suffix=prompt_suffix)
+
+sequence = ''
+stop_word = prompt_prefix.strip()
 
 while True:
     try:
         prompt = input("You: ")
         if prompt == '':
             continue
-        print(f"Bob:", end='')
-        for tok in model.generate(prompt):
-            print(f"{tok}", end='', flush=True)
+        print(f"AI: ", end='')
+        for token in model.generate(prompt):
+            if token == '\n':
+                sequence += token
+                continue
+            if len(sequence) != 0:
+                if stop_word.startswith(sequence.strip()):
+                    sequence += token
+                    if sequence.strip() == stop_word:
+                        sequence = ''
+                        break
+                    else:
+                        continue
+                else:
+                    print(f"{sequence}", end='', flush=True)
+                    sequence = ''
+            print(f"{token}", end='', flush=True)
+
         print()
     except KeyboardInterrupt:
         break
-
 ```
 
 
-You can always refer to the [short documentation](https://abdeladim-s.github.io/pyllamacpp/) for more details.
+# API reference
+You can check the [API reference documentation](https://abdeladim-s.github.io/pyllamacpp/) for more details.
 
 
 # Supported models
