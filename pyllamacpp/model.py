@@ -37,9 +37,9 @@ class Model:
 
     def __init__(self,
                  model_path: str,
-                 prompt_context='',
-                 prompt_prefix='',
-                 prompt_suffix='',
+                 prompt_context: str = '',
+                 prompt_prefix: str = '',
+                 prompt_suffix: str = '',
                  log_level: int = logging.ERROR,
                  n_ctx: int = 512,
                  seed: int = 0,
