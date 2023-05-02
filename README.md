@@ -110,7 +110,7 @@ from pyllamacpp.model import Model
 
 model = Model(ggml_model='./models/gpt4all-model.bin')
 for token in model.generate("Tell me a joke ?"):
-    print(token, end='')
+    print(token, end='', flush=True)
 ```
 
 ### Interactive Dialogue
@@ -126,8 +126,8 @@ while True:
         if prompt == '':
             continue
         print(f"AI:", end='')
-        for tok in model.generate(prompt):
-            print(f"{tok}", end='', flush=True)
+        for token in model.generate(prompt):
+            print(f"{token}", end='', flush=True)
         print()
     except KeyboardInterrupt:
         break
@@ -149,42 +149,23 @@ Bob: Welcome! I'm here to assist you with anything you need. What can I do for y
 prompt_prefix = "\nUser:"
 prompt_suffix = "\nBob:"
 
-model = Model(model_path='/path/to/ggml/model', 
-              prompt_context=prompt_context, 
+model = Model(model_path='/path/to/ggml/model',
+              prompt_context=prompt_context,
               prompt_prefix=prompt_prefix,
               prompt_suffix=prompt_suffix)
 
-sequence = ''
-stop_word = prompt_prefix.strip()
-
 while True:
-    try:
-        prompt = input("You: ")
-        if prompt == '':
-            continue
-        print(f"AI: ", end='')
-        for token in model.generate(prompt):
-            if token == '\n':
-                sequence += token
-                continue
-            if len(sequence) != 0:
-                if stop_word.startswith(sequence.strip()):
-                    sequence += token
-                    if sequence.strip() == stop_word:
-                        sequence = ''
-                        break
-                    else:
-                        continue
-                else:
-                    print(f"{sequence}", end='', flush=True)
-                    sequence = ''
-            print(f"{token}", end='', flush=True)
-
-        print()
-    except KeyboardInterrupt:
-        break
+  try:
+    prompt = input("User: ")
+    if prompt == '':
+      continue
+    print(f"Bob: ", end='')
+    for token in model.generate(prompt, antiprompt='User:'):
+      print(f"{token}", end='', flush=True)
+      print()
+  except KeyboardInterrupt:
+    break
 ```
-
 
 # API reference
 You can check the [API reference documentation](https://abdeladim-s.github.io/pyllamacpp/) for more details.

@@ -201,28 +201,14 @@ def run(args):
     print("...")
     print("[+] Press Ctrl+C to Stop ... ")
     print("...")
-    sequence = ''
+
     while True:
         try:
             prompt = input("You: ")
             if prompt == '':
                 continue
             print(f"{bcolors.OKBLUE}AI: {bcolors.ENDC}", end='', flush=True)
-            for token in model.generate(prompt, **gpt_params):
-                if token == '\n':
-                    sequence += token
-                    continue
-                if len(sequence) != 0:
-                    if PROMPT_PREFIX.strip().startswith(sequence.strip()):
-                        sequence += token
-                        if sequence.strip() == PROMPT_PREFIX.strip():
-                            sequence = ''
-                            break
-                        else:
-                            continue
-                    else:
-                        print(f"{sequence}", end='', flush=True)
-                        sequence = ''
+            for token in model.generate(prompt, antiprompt=PROMPT_PREFIX.strip(), **gpt_params):
                 print(f"{bcolors.OKCYAN}{token}{bcolors.ENDC}", end='', flush=True)
             print()
         except KeyboardInterrupt:

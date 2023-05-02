@@ -28,7 +28,7 @@ class Model:
     ```python
     from pyllamacpp.model import Model
 
-    model = Model(ggml_model='./models/ggml-model-f16-q4_0.bin')
+    model = Model(ggml_model='path/to/ggml/model')
     for token in model.generate("Tell me a joke ?"):
         print(token, end='', flush=True)
     ```
@@ -113,6 +113,7 @@ class Model:
     def generate(self,
                  prompt: str,
                  n_predict: Union[None, int] = None,
+                 antiprompt: str = None,
                  infinite_generation: bool = False,
                  n_threads: int = 4,
                  repeat_last_n: int = 64,
@@ -126,6 +127,8 @@ class Model:
         :param prompt: The prompt :)
         :param n_predict: if n_predict is not None, the inference will stop if it reaches `n_predict` tokens, otherwise
                           it will continue until `EOS`
+        :param antiprompt: aka the stop word, the generation will stop if this word is predicted,
+                           keep it None to handle it in your own way
         :param infinite_generation: set it to `True` to make the generation go infinitely
         :param n_threads: The number of CPU threads
         :param repeat_last_n: last n tokens to penalize
@@ -156,6 +159,9 @@ class Model:
             self._last_n_tokens.append(tok)
 
         n_remain = 0
+        if antiprompt is not None:
+            sequence_queue = []
+            stop_word = antiprompt.strip()
 
         while infinite_generation or predicted_token != pp.llama_token_eos():
             if len(predicted_tokens) > 0:
@@ -178,6 +184,23 @@ class Model:
 
             predicted_tokens.append(predicted_token)
             token_str = pp.llama_token_to_str(self._ctx, predicted_token)
+            if antiprompt is not None:
+                if token_str == '\n':
+                    sequence_queue.append(token_str)
+                    continue
+                if len(sequence_queue) != 0:
+                    if stop_word.startswith(''.join(sequence_queue).strip()):
+                        sequence_queue.append(token_str)
+                        if ''.join(sequence_queue).strip() == stop_word:
+                            break
+                        else:
+                            continue
+                    else:
+                        # consume sequence queue tokens
+                        while len(sequence_queue) != 0:
+                            yield sequence_queue.pop(0)
+                        sequence_queue = []
+
             self._last_n_tokens.pop(0)
             self._last_n_tokens.append(predicted_token)
             yield token_str
