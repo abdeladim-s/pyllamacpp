@@ -193,6 +193,10 @@ All functions from `llama.h` are exposed with the binding module [`_pyllamacpp`]
 # API reference
 You can check the [API reference documentation](https://abdeladim-s.github.io/pyllamacpp/) for more details.
 
+# FAQs
+* [How to build pyllamacpp without AVX2 or FMA.](https://github.com/nomic-ai/pygpt4all/issues/71)
+* [pyllamacpp not support M1 chips MacBook](https://github.com/nomic-ai/pygpt4all/issues/57#issuecomment-1519197837)
+* [ImportError: DLL failed while importing _pyllamacpp](https://github.com/nomic-ai/pygpt4all/issues/53#issuecomment-1529772010)
 
 # Discussions and contributions
 If you find any bug, please open an [issue](https://github.com/abdeladim-s/pyllamacpp/issues).
