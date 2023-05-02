@@ -4,3 +4,5 @@
 ::: pyllamacpp.model
 
 ::: pyllamacpp.utils
+
+::: _pyllamacpp
