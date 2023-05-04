@@ -184,7 +184,10 @@ class Model:
                                                           repeat_penalty)
 
             predicted_tokens.append(predicted_token)
-            token_str = pp.llama_token_to_str(self._ctx, predicted_token)
+            # tokens come as raw undecoded bytes,
+            # and we decode them, replacing those that can't be decoded.
+            # i decoded here for fear of breaking the stopword logic, 
+            token_str = pp.llama_token_to_str(self._ctx, predicted_token).decode('utf-8', "replace")
             if antiprompt is not None:
                 if token_str == '\n':
                     sequence_queue.append(token_str)
@@ -228,11 +231,11 @@ class Model:
         if Model._new_text_callback is not None:
             Model._new_text_callback(text)
         # save res
-        self.res += text
+        self.res += text.decode('utf-8', 'replace')
 
     def cpp_generate(self, prompt: str,
                      n_predict: int = 128,
-                     new_text_callback: Callable[[str], None] = None,
+                     new_text_callback: Callable[[bytes], None] = None,
                      n_threads: int = 4,
                      repeat_last_n: int = 64,
                      top_k: int = 40,

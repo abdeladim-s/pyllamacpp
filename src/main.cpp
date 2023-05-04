@@ -480,7 +480,12 @@ int llama_generate(struct llama_context_wrapper * ctx_w, gpt_params params, py::
         if (!input_noecho) {
             for (auto id : embd) {
 //                printf("%s", llama_token_to_str(ctx, id));
-                new_text_callback(llama_token_to_str(ctx, id));
+                //@NOTE: model.cpp_generate invokes llama_generate() with a python callback function.
+                //@NOTE: we need to make sure that when the python callback function is called, it gets callback with raw bytes
+                //@NOTE: of generated token, else pybind with implicityl try to decode it to Unicode, and cause UnicodeDecodeError
+                std::string tok_str = llama_token_to_str(ctx, id);
+                new_text_callback(py::bytes(tok_str));
+
             }
             fflush(stdout);
         }
@@ -686,7 +691,12 @@ PYBIND11_MODULE(_pyllamacpp, m) {
     m.def("llama_n_embd", &llama_n_embd_wrapper);
     m.def("llama_get_logits", &llama_get_logits_wrapper);
     m.def("llama_get_embeddings", &llama_get_embeddings_wrapper);
-    m.def("llama_token_to_str", &llama_token_to_str_wrapper);
+    m.def("llama_token_to_str", [](struct llama_context_wrapper * ctx_w, llama_token token){
+        //@NOTE: model.generate() calls pp.llama_token_to_str -> llama_token_to_str_wrapper()
+        //@NOTE: we need to make sure that llama_token_to_str_wrapper() returns raw bytes
+        //@NOTE: to prevent implicit conversion of const char* to unicode on python side, leading to UnicodeDecodeError
+        return py::bytes(llama_token_to_str_wrapper(ctx_w, token));
+    });
 
     m.def("llama_token_bos", &llama_token_bos);
     m.def("llama_token_eos", &llama_token_eos);
