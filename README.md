@@ -108,7 +108,7 @@ A simple `Pythonic` API is built on top of `llama.cpp` C/C++ functions. You can 
 ```python
 from pyllamacpp.model import Model
 
-model = Model(ggml_model='./models/gpt4all-model.bin')
+model = Model(model_path='./models/gpt4all-model.bin')
 for token in model.generate("Tell me a joke ?"):
     print(token, end='', flush=True)
 ```
