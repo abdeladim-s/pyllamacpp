@@ -111,6 +111,22 @@ class Model:
         self._last_n_tokens = [0] * self._n_ctx  # n_ctx elements
         self._n_past = 0
 
+    def tokenize(self, text:str):
+        """
+        Returns a list of tokens for the text
+        :param text: text to be tokenized
+        :return: List of tokens
+        """
+        return pp.llama_tokenize(self._ctx, text, True)
+
+    def untokenize(self, tokens:list):
+        """
+        Returns a list of tokens for the text
+        :param text: text to be tokenized
+        :return: A string representing the text extracted from the tokens
+        """
+        return pp.llama_tokens_to_str(self._ctx, tokens)
+
     def generate(self,
                  prompt: str,
                  n_predict: Union[None, int] = None,
