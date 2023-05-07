@@ -87,7 +87,27 @@ std::vector<llama_token> llama_tokenize_wrapper(
 //    return tokens;
 //}
 
+std::string llama_tokens_to_str_wrapper(struct llama_context_wrapper* ctx_w, py::array_t<llama_token> tokens_array) {
+    std::string result;
+    struct llama_context * ctx = ctx_w->ptr;
+    bool all_tokens_valid = true;
 
+    for (int i = 0; i < tokens_array.size(); i++) {
+        llama_token token = tokens_array.at(i);
+        if (token >= llama_n_vocab(ctx)) {
+            all_tokens_valid = false;
+            break;
+        }
+
+        result += llama_token_to_str(ctx, token);
+    }
+
+    if (all_tokens_valid) {
+        return result;
+    } else {
+        return "";
+    }
+}
 
 int llama_n_vocab_wrapper(struct llama_context_wrapper * ctx_w){
     struct llama_context * ctx = ctx_w->ptr;
@@ -697,6 +717,8 @@ PYBIND11_MODULE(_pyllamacpp, m) {
         //@NOTE: to prevent implicit conversion of const char* to unicode on python side, leading to UnicodeDecodeError
         return py::bytes(llama_token_to_str_wrapper(ctx_w, token));
     });
+    m.def("llama_tokens_to_str", &llama_tokens_to_str_wrapper);
+
 
     m.def("llama_token_bos", &llama_token_bos);
     m.def("llama_token_eos", &llama_token_eos);
