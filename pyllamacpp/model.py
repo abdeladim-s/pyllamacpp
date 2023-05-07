@@ -119,7 +119,7 @@ class Model:
         """
         return pp.llama_tokenize(self._ctx, text, True)
 
-    def untokenize(self, tokens:list):
+    def detokenize(self, tokens:list):
         """
         Returns a list of tokens for the text
         :param text: text to be tokenized
