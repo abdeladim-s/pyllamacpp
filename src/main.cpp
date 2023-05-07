@@ -717,6 +717,8 @@ PYBIND11_MODULE(_pyllamacpp, m) {
         //@NOTE: to prevent implicit conversion of const char* to unicode on python side, leading to UnicodeDecodeError
         return py::bytes(llama_token_to_str_wrapper(ctx_w, token));
     });
+    m.def("llama_tokens_to_str", &llama_tokens_to_str_wrapper);
+
 
     m.def("llama_token_bos", &llama_token_bos);
     m.def("llama_token_eos", &llama_token_eos);
