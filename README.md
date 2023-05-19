@@ -168,10 +168,7 @@ while True:
 ```
 
 # Supported models
-
-Fully tested with [GPT4All](https://github.com/nomic-ai/gpt4all) model, see [PyGPT4All](https://github.com/nomic-ai/pygpt4all).
-
-But all models supported by `llama.cpp` should be supported as well:
+All models supported by `llama.cpp` should be supported basically:
 
 <blockquote>
 
