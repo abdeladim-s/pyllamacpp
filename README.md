@@ -50,6 +50,14 @@ so you might need to build it from source:
 pip install git+https://github.com/abdeladim-s/pyllamacpp.git
 ```
 
+:warning: **Note**
+
+[This PR](https://github.com/ggerganov/llama.cpp/pull/1405) introduced some breaking changes.
+If you want to use older models, use version `2.2.0`:
+```bash
+pip install pyllamacpp==2.2.0
+```
+
 # CLI 
 
 You can run the following simple command line interface to test the package once it is installed:
