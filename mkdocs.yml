@@ -72,6 +72,7 @@ plugins:
             show_submodules: true
             filters:
               - "!^_"
+              - "!^LLAMA_FTYPE_" # some errors while parsing!
       watch:
         - pyllamacpp/
 
