@@ -916,7 +916,7 @@ PYBIND11_MODULE(_pyllamacpp, m) {
     py::class_<llama_context_params>(m,"llama_context_params")
         .def(py::init<>())
         .def_readwrite("n_ctx", &llama_context_params::n_ctx)
-        .def_readwrite("n_parts", &llama_context_params::n_parts)
+        .def_readwrite("n_gpu_layers", &llama_context_params::n_gpu_layers)
         .def_readwrite("seed", &llama_context_params::seed)
         .def_readwrite("f16_kv", &llama_context_params::f16_kv)
         .def_readwrite("logits_all", &llama_context_params::logits_all)

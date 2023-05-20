@@ -44,7 +44,7 @@ class Model:
                  log_level: int = logging.ERROR,
                  n_ctx: int = 512,
                  seed: int = 0,
-                 n_parts: int = -1,
+                 n_gpu_layers: int = 0,
                  f16_kv: bool = False,
                  logits_all: bool = False,
                  vocab_only: bool = False,
@@ -58,7 +58,7 @@ class Model:
         :param log_level: logging level, set to INFO by default
         :param n_ctx: LLaMA context
         :param seed: random seed
-        :param n_parts: LLaMA n_parts
+        :param n_gpu_layers: number of layers to store in VRAM
         :param f16_kv: use fp16 for KV cache
         :param logits_all: the llama_eval() call computes all logits, not just the last one
         :param vocab_only: only load the vocabulary, no weights
@@ -77,7 +77,7 @@ class Model:
         # update llama_params
         self.llama_params.n_ctx = n_ctx
         self.llama_params.seed = seed
-        self.llama_params.n_parts = n_parts
+        self.llama_params.n_gpu_layers = n_gpu_layers
         self.llama_params.f16_kv = f16_kv
         self.llama_params.logits_all = logits_all
         self.llama_params.vocab_only = vocab_only
@@ -218,16 +218,30 @@ class Model:
             sequence_queue = []
             stop_word = antiprompt.strip()
 
+        n_ctx = pp.llama_n_ctx(self._ctx)
+
         while infinite_generation or predicted_token != pp.llama_token_eos():
             if len(predicted_tokens) > 0:
-                if (pp.llama_eval(self._ctx,
-                                  predicted_tokens,
-                                  len(predicted_tokens),
-                                  self._n_past,
-                                  n_threads)):
-                    raise Exception("failed to eval the model!")
-                self._n_past += len(predicted_tokens)
-                predicted_tokens.clear()
+                # infinite text generation via context swapping
+                if (self._n_past + len(predicted_tokens)) > n_ctx:
+                    n_left = self._n_past - self.gpt_params.n_keep
+                    self._n_past = max(1, self.gpt_params.n_keep)
+                    predicted_tokens[:0] = self._last_n_tokens[n_ctx - n_left // 2 - len(predicted_tokens):len(self._last_n_tokens) - len(predicted_tokens)]
+
+                for i in range(0, len(predicted_tokens), self.gpt_params.n_batch):
+                    n_eval = len(predicted_tokens) - i
+                    if n_eval > self.gpt_params.n_batch:
+                        n_eval = self.gpt_params.n_batch
+
+                    if (pp.llama_eval(self._ctx,
+                                      predicted_tokens[i:],
+                                      n_eval,
+                                      self._n_past,
+                                      n_threads)):
+                        raise Exception("Model eval failed!")
+                self._n_past += n_eval
+
+            predicted_tokens.clear()
 
             # sampling
             predicted_token = pp.sample_next_token(self._ctx, self.gpt_params, self._last_n_tokens)
