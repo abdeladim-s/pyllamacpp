@@ -14,7 +14,7 @@ add_subdirectory(pybind11)
 add_subdirectory(llama.cpp)
 # add_subdirectory(ggml)
 
-file (GLOB CPP_FILES "llama.cpp/*.cpp")
+file (GLOB CPP_FILES "llama.cpp/llama.cpp")
 file (GLOB C_FILES "llama.cpp/ggml.c")
 file (GLOB H_FILES "llama.cpp/ggml.h" "llama.cpp/llama.h")
 

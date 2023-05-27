@@ -1,6 +1,7 @@
 # PyLLaMACpp
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![PyPi version](https://badgen.net/pypi/v/pyllamacpp)](https://pypi.org/project/pyllamacpp/)
+[![Downloads](https://static.pepy.tech/badge/pyllamacpp)](https://pepy.tech/project/pyllamacpp)
 
 Python bindings for [llama.cpp](https://github.com/ggerganov/llama.cpp)
 
