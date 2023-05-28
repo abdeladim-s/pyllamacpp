@@ -159,6 +159,7 @@ prompt_prefix = "\nUser:"
 prompt_suffix = "\nBob:"
 
 model = Model(model_path='/path/to/ggml/model',
+              n_ctx=512,
               prompt_context=prompt_context,
               prompt_prefix=prompt_prefix,
               prompt_suffix=prompt_suffix)
@@ -169,7 +170,13 @@ while True:
         if prompt == '':
             continue
         print(f"Bob: ", end='')
-        for token in model.generate(prompt, antiprompt='User:'):
+        for token in model.generate(prompt,
+                                    antiprompt='User:',  
+                                    n_threads=6,
+                                    n_batch=1024,
+                                    n_predict=256,
+                                    n_keep=48,
+                                    repeat_penalty=1.0,):
             print(f"{token}", end='', flush=True)
         print()
     except KeyboardInterrupt:

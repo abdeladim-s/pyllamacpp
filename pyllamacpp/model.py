@@ -134,6 +134,8 @@ class Model:
                  n_threads: int = 4,
                  seed: Union[None, int] = None,
                  antiprompt: str = None,
+                 n_batch: int = 512,
+                 n_keep: int = 0,
                  top_k: int = 40,
                  top_p: float = 0.95,
                  tfs_z: float = 1.00,
@@ -157,6 +159,8 @@ class Model:
         :param seed: Set rng seed, leave it None for random
         :param antiprompt: aka the stop word, the generation will stop if this word is predicted,
                            keep it None to handle it in your own way
+        :param n_batch: batch size for prompt processing (must be >=32 to use BLAS)
+        :param n_keep: number of tokens to keep from initial prompt
         :param top_k: top K sampling parameter, <= 0 to use vocab size
         :param top_p: top P sampling parameter, 1.0 = disabled
         :param tfs_z: tfs_z sampling parameter, 1.0 = disabled
@@ -174,6 +178,8 @@ class Model:
         :return: Tokens generator
         """
         # update params
+        self.gpt_params.n_batch = n_batch
+        self.gpt_params.n_keep = n_keep
         self.gpt_params.top_k = top_k
         self.gpt_params.top_p = top_p
         self.gpt_params.tfs_z = tfs_z

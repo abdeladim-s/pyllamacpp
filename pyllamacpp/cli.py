@@ -36,13 +36,7 @@ LLAMA_CONTEXT_PARAMS_SCHEMA = {
         'type': int,
         'description': "text context",
         'options': None,
-        'default': -1
-    },
-    'n_parts': {
-        'type': int,
-        'description': "",
-        'options': None,
-        'default': -1
+        'default': 512
     },
     'seed': {
         'type': int,
@@ -54,31 +48,31 @@ LLAMA_CONTEXT_PARAMS_SCHEMA = {
         'type': bool,
         'description': "use fp16 for KV cache",
         'options': None,
-        'default': 0
+        'default': False
     },
     'logits_all': {
         'type': bool,
         'description': "the llama_eval() call computes all logits, not just the last one",
         'options': None,
-        'default': 0
+        'default': False
     },
     'vocab_only': {
         'type': bool,
         'description': "only load the vocabulary, no weights",
         'options': None,
-        'default': 0
+        'default': False
     },
     'use_mlock': {
         'type': bool,
         'description': "force system to keep model in RAM",
         'options': None,
-        'default': 0
+        'default': False
     },
     'embedding': {
         'type': bool,
         'description': "embedding mode only",
         'options': None,
-        'default': 0
+        'default': False
     }
 }
 
@@ -87,7 +81,7 @@ GPT_PARAMS_SCHEMA = {
             'type': int,
             'description': "Number of tokens to predict",
             'options': None,
-            'default': 50
+            'default': 256
     },
     'n_threads': {
             'type': int,
@@ -102,6 +96,12 @@ GPT_PARAMS_SCHEMA = {
             'default': 64
     },
     # sampling params
+    'n_keep': {
+        'type': int,
+        'description': "n_keep",
+        'options': None,
+        'default': 48
+    },
     'top_k': {
             'type': int,
             'description': "top_k",
@@ -124,13 +124,13 @@ GPT_PARAMS_SCHEMA = {
             'type': float,
             'description': "repeat_penalty",
             'options': None,
-            'default': 1.3
+            'default': 1.0
     },
     'n_batch': {
             'type': int,
             'description': "batch size for prompt processing",
             'options': None,
-            'default': True
+            'default': 1024
     }
 }
 
