@@ -164,16 +164,16 @@ model = Model(model_path='/path/to/ggml/model',
               prompt_suffix=prompt_suffix)
 
 while True:
-  try:
-    prompt = input("User: ")
-    if prompt == '':
-      continue
-    print(f"Bob: ", end='')
-    for token in model.generate(prompt, antiprompt='User:'):
-      print(f"{token}", end='', flush=True)
-      print()
-  except KeyboardInterrupt:
-    break
+    try:
+        prompt = input("User: ")
+        if prompt == '':
+            continue
+        print(f"Bob: ", end='')
+        for token in model.generate(prompt, antiprompt='User:'):
+            print(f"{token}", end='', flush=True)
+        print()
+    except KeyboardInterrupt:
+        break
 ```
 
 # Supported models
