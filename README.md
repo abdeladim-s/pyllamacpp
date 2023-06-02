@@ -2,6 +2,9 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![PyPi version](https://badgen.net/pypi/v/pyllamacpp)](https://pypi.org/project/pyllamacpp/)
 [![Downloads](https://static.pepy.tech/badge/pyllamacpp)](https://pepy.tech/project/pyllamacpp)
+<a target="_blank" href="https://colab.research.google.com/github/abdeladim-s/pyllamacpp/blob/main/examples/PyLLaMACpp.ipynb">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
 
 Python bindings for [llama.cpp](https://github.com/ggerganov/llama.cpp)
 
