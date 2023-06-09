@@ -411,6 +411,40 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#_pyllamacpp.LLaMAModel" class="md-nav__link">
+    LLaMAModel
+  </a>
+  
+    <nav class="md-nav" aria-label="LLaMAModel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_pyllamacpp.LLaMAModel.generate" class="md-nav__link">
+    generate()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_pyllamacpp.LLaMAModel.setup" class="md-nav__link">
+    setup()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_pyllamacpp.LLaMAModel.update_prompt" class="md-nav__link">
+    update_prompt()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#_pyllamacpp.gpt_params" class="md-nav__link">
     gpt_params
   </a>
@@ -1840,11 +1874,11 @@
     <span class="n">predicted_token</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="c1"># add global context for the first time</span>
-    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_past</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">tok</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prompt_context_tokens</span><span class="p">:</span>
-            <span class="n">predicted_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tok</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_last_n_tokens</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_last_n_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tok</span><span class="p">)</span>
+    <span class="c1"># if self._n_past == 0:</span>
+    <span class="k">for</span> <span class="n">tok</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prompt_context_tokens</span><span class="p">:</span>
+        <span class="n">predicted_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tok</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_n_tokens</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_n_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tok</span><span class="p">)</span>
 
     <span class="c1"># consume input tokens</span>
     <span class="k">for</span> <span class="n">tok</span> <span class="ow">in</span> <span class="n">input_tokens</span><span class="p">:</span>
@@ -1878,7 +1912,7 @@
                                   <span class="bp">self</span><span class="o">.</span><span class="n">_n_past</span><span class="p">,</span>
                                   <span class="n">n_threads</span><span class="p">)):</span>
                     <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Model eval failed!&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_n_past</span> <span class="o">+=</span> <span class="n">n_eval</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_n_past</span> <span class="o">+=</span> <span class="n">n_eval</span>
 
         <span class="n">predicted_tokens</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 
@@ -3013,6 +3047,119 @@ repository, copied here for convinience purposes only!</p>
 
 
 
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="_pyllamacpp.LLaMAModel" class="doc doc-heading">
+        <span class="doc doc-object-name doc-class-name">LLaMAModel</span>
+
+
+</h3>
+<div class="highlight"><pre><span></span><code><span class="n">LLaMAModel</span><span class="p">()</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code>pybind11_object</code></p>
+
+
+  
+      <p><strong>init</strong>(self: _pyllamacpp.LLaMAModel, arg0: _pyllamacpp.llama_context, arg1: _pyllamacpp.gpt_params, arg2: int) -&gt; None</p>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h4 id="_pyllamacpp.LLaMAModel.generate" class="doc doc-heading">
+        <span class="doc doc-object-name doc-function-name">generate</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+</h4>
+<div class="highlight"><pre><span></span><code><span class="n">generate</span><span class="p">()</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>generate(self: _pyllamacpp.LLaMAModel, arg0: _pyllamacpp.gpt_params) -&gt; int</p>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h4 id="_pyllamacpp.LLaMAModel.setup" class="doc doc-heading">
+        <span class="doc doc-object-name doc-function-name">setup</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+</h4>
+<div class="highlight"><pre><span></span><code><span class="n">setup</span><span class="p">()</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>setup(self: _pyllamacpp.LLaMAModel, arg0: _pyllamacpp.gpt_params) -&gt; int</p>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h4 id="_pyllamacpp.LLaMAModel.update_prompt" class="doc doc-heading">
+        <span class="doc doc-object-name doc-function-name">update_prompt</span>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-method descriptor"><code>method descriptor</code></small>
+  </span>
+
+</h4>
+<div class="highlight"><pre><span></span><code><span class="n">update_prompt</span><span class="p">()</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>update_prompt(self: _pyllamacpp.LLaMAModel, arg0: _pyllamacpp.gpt_params, arg1: str) -&gt; None</p>
+
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
 
 <div class="doc doc-object doc-class">
 
