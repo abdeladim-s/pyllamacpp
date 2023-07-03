@@ -108,7 +108,7 @@ class Model:
         """Resets the context"""
         self._prompt_context_tokens = pp.llama_tokenize(self._ctx, self.prompt_cntext, True)
         self._prompt_prefix_tokens = pp.llama_tokenize(self._ctx, self.prompt_prefix, True)
-        self._prompt_suffix_tokens = pp.llama_tokenize(self._ctx, self.prompt_suffix, True)
+        self._prompt_suffix_tokens = pp.llama_tokenize(self._ctx, self.prompt_suffix, False)
         self._last_n_tokens = [0] * self._n_ctx  # n_ctx elements
         self._n_past = 0
 
@@ -133,7 +133,7 @@ class Model:
                  n_predict: Union[None, int] = None,
                  n_threads: int = 4,
                  seed: Union[None, int] = None,
-                 antiprompt: str = None,
+                 anti_prompt: str = None,
                  n_batch: int = 512,
                  n_keep: int = 0,
                  top_k: int = 40,
@@ -157,7 +157,7 @@ class Model:
                           it will continue until `EOS`
         :param n_threads: The number of CPU threads
         :param seed: Set rng seed, leave it None for random
-        :param antiprompt: aka the stop word, the generation will stop if this word is predicted,
+        :param anti_prompt: aka the stop word, the generation will stop if this word is predicted,
                            keep it None to handle it in your own way
         :param n_batch: batch size for prompt processing (must be >=32 to use BLAS)
         :param n_keep: number of tokens to keep from initial prompt
@@ -199,14 +199,18 @@ class Model:
             seed = int(time.time())
             pp.llama_set_rng_seed(self._ctx, seed)
 
-        input_tokens = self._prompt_prefix_tokens + pp.llama_tokenize(self._ctx, prompt,
-                                                                      True) + self._prompt_suffix_tokens
+        input_tokens = self._prompt_prefix_tokens + \
+                       pp.llama_tokenize(self._ctx, prompt, len(self._prompt_prefix_tokens) == 0) + \
+                       self._prompt_suffix_tokens
+
+        # input_tokens = pp.llama_tokenize(self._ctx, prompt, True)
+
         if len(input_tokens) > self._n_ctx - 4:
             raise Exception('Prompt too long!')
         predicted_tokens = []
         predicted_token = 0
 
-        # add global context for the first time
+        # add global context if no past yet
         if self._n_past == 0:
             for tok in self._prompt_context_tokens:
                 predicted_tokens.append(tok)
@@ -220,9 +224,9 @@ class Model:
             self._last_n_tokens.append(tok)
 
         n_remain = 0
-        if antiprompt is not None:
+        if anti_prompt is not None:
             sequence_queue = []
-            stop_word = antiprompt.strip()
+            stop_word = anti_prompt.strip()
 
         n_ctx = pp.llama_n_ctx(self._ctx)
 
@@ -232,20 +236,21 @@ class Model:
                 if (self._n_past + len(predicted_tokens)) > n_ctx:
                     n_left = self._n_past - self.gpt_params.n_keep
                     self._n_past = max(1, self.gpt_params.n_keep)
-                    predicted_tokens[:0] = self._last_n_tokens[n_ctx - n_left // 2 - len(predicted_tokens):len(self._last_n_tokens) - len(predicted_tokens)]
+                    predicted_tokens[:0] = self._last_n_tokens[
+                                           n_ctx - n_left // 2 - len(predicted_tokens):len(self._last_n_tokens) - len(
+                                               predicted_tokens)]
 
                 for i in range(0, len(predicted_tokens), self.gpt_params.n_batch):
                     n_eval = len(predicted_tokens) - i
                     if n_eval > self.gpt_params.n_batch:
                         n_eval = self.gpt_params.n_batch
 
-                    if (pp.llama_eval(self._ctx,
-                                      predicted_tokens[i:],
-                                      n_eval,
-                                      self._n_past,
-                                      n_threads)):
-                        raise Exception("Model eval failed!")
-                self._n_past += n_eval
+                    pp.llama_eval(self._ctx,
+                                  predicted_tokens[i:],
+                                  n_eval,
+                                  self._n_past,
+                                  n_threads)
+                    self._n_past += n_eval
 
             predicted_tokens.clear()
 
@@ -257,7 +262,7 @@ class Model:
             # and we decode them, replacing those that can't be decoded.
             # I decoded here for fear of breaking the stopword logic,
             token_str = pp.llama_token_to_str(self._ctx, predicted_token).decode('utf-8', "replace")
-            if antiprompt is not None:
+            if anti_prompt is not None:
                 if token_str == '\n':
                     sequence_queue.append(token_str)
                     continue
@@ -323,7 +328,7 @@ class Model:
                      n_batch: int = 8,
                      n_keep: int = 0,
                      interactive: bool = False,
-                     antiprompt: List = [],
+                     anti_prompt: List = [],
                      instruct: bool = False,
                      verbose_prompt: bool = False,
                      ) -> str:
@@ -349,7 +354,7 @@ class Model:
         :param n_batch: GPT params n_batch
         :param n_keep: GPT params n_keep
         :param interactive: interactive communication
-        :param antiprompt: list of anti prompts
+        :param anti_prompt: list of anti prompts
         :param instruct: Activate instruct mode
         :param verbose_prompt: verbose prompt
         :return: the new generated text
@@ -372,7 +377,7 @@ class Model:
         self.gpt_params.n_batch = n_batch
         self.gpt_params.n_keep = n_keep
         self.gpt_params.interactive = interactive
-        self.gpt_params.antiprompt = antiprompt
+        self.gpt_params.anti_prompt = anti_prompt
         self.gpt_params.instruct = instruct
         self.gpt_params.verbose_prompt = verbose_prompt
 
