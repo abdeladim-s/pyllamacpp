@@ -133,7 +133,7 @@ class Model:
                  n_predict: Union[None, int] = None,
                  n_threads: int = 4,
                  seed: Union[None, int] = None,
-                 anti_prompt: str = None,
+                 antiprompt: str = None,
                  n_batch: int = 512,
                  n_keep: int = 0,
                  top_k: int = 40,
@@ -157,7 +157,7 @@ class Model:
                           it will continue until `EOS`
         :param n_threads: The number of CPU threads
         :param seed: Set rng seed, leave it None for random
-        :param anti_prompt: aka the stop word, the generation will stop if this word is predicted,
+        :param antiprompt: aka the stop word, the generation will stop if this word is predicted,
                            keep it None to handle it in your own way
         :param n_batch: batch size for prompt processing (must be >=32 to use BLAS)
         :param n_keep: number of tokens to keep from initial prompt
@@ -224,9 +224,9 @@ class Model:
             self._last_n_tokens.append(tok)
 
         n_remain = 0
-        if anti_prompt is not None:
+        if antiprompt is not None:
             sequence_queue = []
-            stop_word = anti_prompt.strip()
+            stop_word = antiprompt.strip()
 
         n_ctx = pp.llama_n_ctx(self._ctx)
 
@@ -262,7 +262,7 @@ class Model:
             # and we decode them, replacing those that can't be decoded.
             # I decoded here for fear of breaking the stopword logic,
             token_str = pp.llama_token_to_str(self._ctx, predicted_token).decode('utf-8', "replace")
-            if anti_prompt is not None:
+            if antiprompt is not None:
                 if token_str == '\n':
                     sequence_queue.append(token_str)
                     continue
@@ -408,6 +408,47 @@ class Model:
     @staticmethod
     def llama_print_system_info():
         pp.llama_print_system_info()
+
+    def get_embeddings(self) -> List[float]:
+        """
+        Get the embeddings for the input
+        shape: [n_embd] (1-dimensional)
+
+        :return the last embeddings vector from the context
+        """
+        assert self.llama_params.embedding, "The model should be instanciated with embedding=True to get the embeddings"
+        return pp.llama_get_embeddings(self._ctx)
+
+    def get_prompt_embeddings(self,
+                              prompt: str,
+                              n_threads: int = 4,
+                              n_batch: int = 512
+                              ) -> List[float]:
+        """
+        Get the embeddings of a specific prompt
+        ::warning:: this will reset the context
+
+        :param prompt: the prompt :)
+        :param n_threads: The number of CPU threads
+        :param n_batch: batch size for prompt processing (must be >=32 to use BLAS)
+        :return The embeddings vector
+        """
+        assert self.llama_params.embedding, "The model should be instanciated with embedding=True to get the embeddings"
+        self.reset()
+        tokens = self.tokenize(prompt)
+        for i in range(0, len(tokens), n_batch):
+            n_eval = len(tokens) - i
+            if n_eval > n_batch:
+                n_eval = n_batch
+
+            pp.llama_eval(self._ctx,
+                          tokens[i:],
+                          n_eval,
+                          0,
+                          n_threads)
+        embeddings = self.get_embeddings()
+        self.reset()
+        return embeddings
 
     def __del__(self):
         if self._ctx:

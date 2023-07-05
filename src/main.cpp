@@ -196,9 +196,12 @@ float * llama_get_logits_wrapper(struct llama_context_wrapper * ctx_w){
 
 }
 
-float * llama_get_embeddings_wrapper(struct llama_context_wrapper * ctx_w){
+std::vector<float> llama_get_embeddings_wrapper(struct llama_context_wrapper * ctx_w){
     struct llama_context * ctx = ctx_w->ptr;
-    return llama_get_embeddings(ctx);
+    int n_embed = llama_n_embd(ctx);
+    float * embed_ptr = llama_get_embeddings(ctx);
+    std::vector<float> embeddings(embed_ptr, embed_ptr + n_embed);
+    return embeddings;
 }
 
 const char * llama_token_to_str_wrapper(struct llama_context_wrapper * ctx_w, llama_token token){
