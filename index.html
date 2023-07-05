@@ -358,6 +358,20 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#pyllamacpp.model.Model.get_embeddings" class="md-nav__link">
+    get_embeddings()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyllamacpp.model.Model.get_prompt_embeddings" class="md-nav__link">
+    get_prompt_embeddings()
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1208,7 +1222,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Resets the context&quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_prompt_context_tokens</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">llama_tokenize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ctx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prompt_cntext</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_prompt_prefix_tokens</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">llama_tokenize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ctx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prompt_prefix</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">_prompt_suffix_tokens</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">llama_tokenize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ctx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prompt_suffix</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_prompt_suffix_tokens</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">llama_tokenize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ctx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prompt_suffix</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_last_n_tokens</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_ctx</span>  <span class="c1"># n_ctx elements</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_n_past</span> <span class="o">=</span> <span class="mi">0</span>
 </code></pre></div></td></tr></table></div>
@@ -1795,7 +1809,12 @@
 <span class="normal">280</span>
 <span class="normal">281</span>
 <span class="normal">282</span>
-<span class="normal">283</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
              <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
              <span class="n">n_predict</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
              <span class="n">n_threads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
@@ -1866,19 +1885,23 @@
         <span class="n">seed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
         <span class="n">pp</span><span class="o">.</span><span class="n">llama_set_rng_seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ctx</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
 
-    <span class="n">input_tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prompt_prefix_tokens</span> <span class="o">+</span> <span class="n">pp</span><span class="o">.</span><span class="n">llama_tokenize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ctx</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span>
-                                                                  <span class="kc">True</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prompt_suffix_tokens</span>
+    <span class="n">input_tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prompt_prefix_tokens</span> <span class="o">+</span> \
+                   <span class="n">pp</span><span class="o">.</span><span class="n">llama_tokenize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ctx</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_prompt_prefix_tokens</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> \
+                   <span class="bp">self</span><span class="o">.</span><span class="n">_prompt_suffix_tokens</span>
+
+    <span class="c1"># input_tokens = pp.llama_tokenize(self._ctx, prompt, True)</span>
+
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_tokens</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_ctx</span> <span class="o">-</span> <span class="mi">4</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Prompt too long!&#39;</span><span class="p">)</span>
     <span class="n">predicted_tokens</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">predicted_token</span> <span class="o">=</span> <span class="mi">0</span>
 
-    <span class="c1"># add global context for the first time</span>
-    <span class="c1"># if self._n_past == 0:</span>
-    <span class="k">for</span> <span class="n">tok</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prompt_context_tokens</span><span class="p">:</span>
-        <span class="n">predicted_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tok</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_last_n_tokens</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_last_n_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tok</span><span class="p">)</span>
+    <span class="c1"># add global context if no past yet</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_past</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">tok</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prompt_context_tokens</span><span class="p">:</span>
+            <span class="n">predicted_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tok</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_last_n_tokens</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_last_n_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tok</span><span class="p">)</span>
 
     <span class="c1"># consume input tokens</span>
     <span class="k">for</span> <span class="n">tok</span> <span class="ow">in</span> <span class="n">input_tokens</span><span class="p">:</span>
@@ -1899,19 +1922,20 @@
             <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_past</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">predicted_tokens</span><span class="p">))</span> <span class="o">&gt;</span> <span class="n">n_ctx</span><span class="p">:</span>
                 <span class="n">n_left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_n_past</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpt_params</span><span class="o">.</span><span class="n">n_keep</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_n_past</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpt_params</span><span class="o">.</span><span class="n">n_keep</span><span class="p">)</span>
-                <span class="n">predicted_tokens</span><span class="p">[:</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_n_tokens</span><span class="p">[</span><span class="n">n_ctx</span> <span class="o">-</span> <span class="n">n_left</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">predicted_tokens</span><span class="p">):</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_last_n_tokens</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">predicted_tokens</span><span class="p">)]</span>
+                <span class="n">predicted_tokens</span><span class="p">[:</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_n_tokens</span><span class="p">[</span>
+                                       <span class="n">n_ctx</span> <span class="o">-</span> <span class="n">n_left</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">predicted_tokens</span><span class="p">):</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_last_n_tokens</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span>
+                                           <span class="n">predicted_tokens</span><span class="p">)]</span>
 
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">predicted_tokens</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpt_params</span><span class="o">.</span><span class="n">n_batch</span><span class="p">):</span>
                 <span class="n">n_eval</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">predicted_tokens</span><span class="p">)</span> <span class="o">-</span> <span class="n">i</span>
                 <span class="k">if</span> <span class="n">n_eval</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpt_params</span><span class="o">.</span><span class="n">n_batch</span><span class="p">:</span>
                     <span class="n">n_eval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpt_params</span><span class="o">.</span><span class="n">n_batch</span>
 
-                <span class="k">if</span> <span class="p">(</span><span class="n">pp</span><span class="o">.</span><span class="n">llama_eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ctx</span><span class="p">,</span>
-                                  <span class="n">predicted_tokens</span><span class="p">[</span><span class="n">i</span><span class="p">:],</span>
-                                  <span class="n">n_eval</span><span class="p">,</span>
-                                  <span class="bp">self</span><span class="o">.</span><span class="n">_n_past</span><span class="p">,</span>
-                                  <span class="n">n_threads</span><span class="p">)):</span>
-                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Model eval failed!&quot;</span><span class="p">)</span>
+                <span class="n">pp</span><span class="o">.</span><span class="n">llama_eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ctx</span><span class="p">,</span>
+                              <span class="n">predicted_tokens</span><span class="p">[</span><span class="n">i</span><span class="p">:],</span>
+                              <span class="n">n_eval</span><span class="p">,</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">_n_past</span><span class="p">,</span>
+                              <span class="n">n_threads</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_n_past</span> <span class="o">+=</span> <span class="n">n_eval</span>
 
         <span class="n">predicted_tokens</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
@@ -1983,7 +2007,7 @@
     <span class="n">n_batch</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
     <span class="n">n_keep</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
     <span class="n">interactive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">antiprompt</span><span class="o">=</span><span class="p">[],</span>
+    <span class="n">anti_prompt</span><span class="o">=</span><span class="p">[],</span>
     <span class="n">instruct</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">verbose_prompt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span>
@@ -2195,7 +2219,7 @@
           </td>
         </tr>
         <tr>
-          <td><code>antiprompt</code></td>
+          <td><code>anti_prompt</code></td>
           <td>
                 <code><span title="typing.List">List</span></code>
           </td>
@@ -2247,12 +2271,7 @@
 
       <details class="quote">
         <summary>Source code in <code>pyllamacpp/model.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">307</span>
-<span class="normal">308</span>
-<span class="normal">309</span>
-<span class="normal">310</span>
-<span class="normal">311</span>
-<span class="normal">312</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">312</span>
 <span class="normal">313</span>
 <span class="normal">314</span>
 <span class="normal">315</span>
@@ -2325,7 +2344,12 @@
 <span class="normal">382</span>
 <span class="normal">383</span>
 <span class="normal">384</span>
-<span class="normal">385</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">cpp_generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="normal">385</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">cpp_generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
                  <span class="n">n_predict</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">128</span><span class="p">,</span>
                  <span class="n">new_text_callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">bytes</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                  <span class="n">n_threads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
@@ -2344,7 +2368,7 @@
                  <span class="n">n_batch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
                  <span class="n">n_keep</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
                  <span class="n">interactive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-                 <span class="n">antiprompt</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="p">[],</span>
+                 <span class="n">anti_prompt</span><span class="p">:</span> <span class="n">List</span> <span class="o">=</span> <span class="p">[],</span>
                  <span class="n">instruct</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                  <span class="n">verbose_prompt</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                  <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -2370,7 +2394,7 @@
 <span class="sd">    :param n_batch: GPT params n_batch</span>
 <span class="sd">    :param n_keep: GPT params n_keep</span>
 <span class="sd">    :param interactive: interactive communication</span>
-<span class="sd">    :param antiprompt: list of anti prompts</span>
+<span class="sd">    :param anti_prompt: list of anti prompts</span>
 <span class="sd">    :param instruct: Activate instruct mode</span>
 <span class="sd">    :param verbose_prompt: verbose prompt</span>
 <span class="sd">    :return: the new generated text</span>
@@ -2393,7 +2417,7 @@
     <span class="bp">self</span><span class="o">.</span><span class="n">gpt_params</span><span class="o">.</span><span class="n">n_batch</span> <span class="o">=</span> <span class="n">n_batch</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">gpt_params</span><span class="o">.</span><span class="n">n_keep</span> <span class="o">=</span> <span class="n">n_keep</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">gpt_params</span><span class="o">.</span><span class="n">interactive</span> <span class="o">=</span> <span class="n">interactive</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">gpt_params</span><span class="o">.</span><span class="n">antiprompt</span> <span class="o">=</span> <span class="n">antiprompt</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">gpt_params</span><span class="o">.</span><span class="n">anti_prompt</span> <span class="o">=</span> <span class="n">anti_prompt</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">gpt_params</span><span class="o">.</span><span class="n">instruct</span> <span class="o">=</span> <span class="n">instruct</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">gpt_params</span><span class="o">.</span><span class="n">verbose_prompt</span> <span class="o">=</span> <span class="n">verbose_prompt</span>
 
@@ -2450,18 +2474,18 @@
 
       <details class="quote">
         <summary>Source code in <code>pyllamacpp/model.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">387</span>
-<span class="normal">388</span>
-<span class="normal">389</span>
-<span class="normal">390</span>
-<span class="normal">391</span>
-<span class="normal">392</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">392</span>
 <span class="normal">393</span>
 <span class="normal">394</span>
 <span class="normal">395</span>
 <span class="normal">396</span>
 <span class="normal">397</span>
-<span class="normal">398</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">398</span>
+<span class="normal">399</span>
+<span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a `dict` representation of the params</span>
@@ -2473,6 +2497,176 @@
             <span class="k">continue</span>
         <span class="n">res</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">res</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h4 id="pyllamacpp.model.Model.get_embeddings" class="doc doc-heading">
+        <span class="doc doc-object-name doc-function-name">get_embeddings</span>
+
+
+</h4>
+<div class="highlight"><pre><span></span><code><span class="n">get_embeddings</span><span class="p">()</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Get the embeddings for the input
+shape: [n_embd] (1-dimensional)</p>
+
+      <details class="quote">
+        <summary>Source code in <code>pyllamacpp/model.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">412</span>
+<span class="normal">413</span>
+<span class="normal">414</span>
+<span class="normal">415</span>
+<span class="normal">416</span>
+<span class="normal">417</span>
+<span class="normal">418</span>
+<span class="normal">419</span>
+<span class="normal">420</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the embeddings for the input</span>
+<span class="sd">    shape: [n_embd] (1-dimensional)</span>
+
+<span class="sd">    :return the last embeddings vector from the context</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">llama_params</span><span class="o">.</span><span class="n">embedding</span><span class="p">,</span> <span class="s2">&quot;The model should be instanciated with embedding=True to get the embeddings&quot;</span>
+    <span class="k">return</span> <span class="n">pp</span><span class="o">.</span><span class="n">llama_get_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ctx</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h4 id="pyllamacpp.model.Model.get_prompt_embeddings" class="doc doc-heading">
+        <span class="doc doc-object-name doc-function-name">get_prompt_embeddings</span>
+
+
+</h4>
+<div class="highlight"><pre><span></span><code><span class="n">get_prompt_embeddings</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">n_threads</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">n_batch</span><span class="o">=</span><span class="mi">512</span><span class="p">)</span>
+</code></pre></div>
+
+  <div class="doc doc-contents ">
+  
+      <p>Get the embeddings of a specific prompt
+:<img alt="⚠" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@14.1.2/assets/svg/26a0.svg" title=":warning:" />: this will reset the context</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>prompt</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>the prompt :)</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>n_threads</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td><p>The number of CPU threads</p></td>
+          <td>
+                <code>4</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>n_batch</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td><p>batch size for prompt processing (must be &gt;=32 to use BLAS)</p></td>
+          <td>
+                <code>512</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+      <details class="quote">
+        <summary>Source code in <code>pyllamacpp/model.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">422</span>
+<span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_prompt_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                          <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                          <span class="n">n_threads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+                          <span class="n">n_batch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">512</span>
+                          <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the embeddings of a specific prompt</span>
+<span class="sd">    ::warning:: this will reset the context</span>
+
+<span class="sd">    :param prompt: the prompt :)</span>
+<span class="sd">    :param n_threads: The number of CPU threads</span>
+<span class="sd">    :param n_batch: batch size for prompt processing (must be &gt;=32 to use BLAS)</span>
+<span class="sd">    :return The embeddings vector</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">llama_params</span><span class="o">.</span><span class="n">embedding</span><span class="p">,</span> <span class="s2">&quot;The model should be instanciated with embedding=True to get the embeddings&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenize</span><span class="p">(</span><span class="n">prompt</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">),</span> <span class="n">n_batch</span><span class="p">):</span>
+        <span class="n">n_eval</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">-</span> <span class="n">i</span>
+        <span class="k">if</span> <span class="n">n_eval</span> <span class="o">&gt;</span> <span class="n">n_batch</span><span class="p">:</span>
+            <span class="n">n_eval</span> <span class="o">=</span> <span class="n">n_batch</span>
+
+        <span class="n">pp</span><span class="o">.</span><span class="n">llama_eval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ctx</span><span class="p">,</span>
+                      <span class="n">tokens</span><span class="p">[</span><span class="n">i</span><span class="p">:],</span>
+                      <span class="n">n_eval</span><span class="p">,</span>
+                      <span class="mi">0</span><span class="p">,</span>
+                      <span class="n">n_threads</span><span class="p">)</span>
+    <span class="n">embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_embeddings</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">embeddings</span>
 </code></pre></div></td></tr></table></div>
       </details>
   </div>
@@ -3579,7 +3773,7 @@ repository, copied here for convinience purposes only!</p>
 
   <div class="doc doc-contents ">
   
-      <p>llama_get_embeddings(arg0: _pyllamacpp.llama_context) -&gt; float</p>
+      <p>llama_get_embeddings(arg0: _pyllamacpp.llama_context) -&gt; List[float]</p>
 
   </div>
 
