@@ -412,9 +412,8 @@ class Model:
     def get_embeddings(self) -> List[float]:
         """
         Get the embeddings for the input
-        shape: [n_embd] (1-dimensional)
 
-        :return the last embeddings vector from the context
+        :return the last embeddings vector from the context (shape: [n_embd] (1-dimensional))
         """
         assert self.llama_params.embedding, "The model should be instanciated with embedding=True to get the embeddings"
         return pp.llama_get_embeddings(self._ctx)
@@ -426,7 +425,8 @@ class Model:
                               ) -> List[float]:
         """
         Get the embeddings of a specific prompt
-        ::warning:: this will reset the context
+
+        :warning: this will reset the context
 
         :param prompt: the prompt :)
         :param n_threads: The number of CPU threads
