@@ -433,7 +433,7 @@ class Model:
         :param n_batch: batch size for prompt processing (must be >=32 to use BLAS)
         :return The embeddings vector
         """
-        assert self.llama_params.embedding, "The model should be instanciated with embedding=True to get the embeddings"
+        assert self.llama_params.embedding, "The model should be instanced with embedding=True to get the embeddings"
         self.reset()
         tokens = self.tokenize(prompt)
         for i in range(0, len(tokens), n_batch):
