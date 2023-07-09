@@ -11,12 +11,12 @@ project(pyllamacpp)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
 add_subdirectory(pybind11)
-add_subdirectory(llama.cpp)
+add_subdirectory(ggllm.cpp)
 # add_subdirectory(ggml)
 
-file (GLOB CPP_FILES "llama.cpp/llama.cpp")
-file (GLOB C_FILES "llama.cpp/ggml.c")
-file (GLOB H_FILES "llama.cpp/ggml.h" "llama.cpp/llama.h")
+file (GLOB CPP_FILES "ggllm.cpp/llama.cpp")
+file (GLOB C_FILES "ggllm.cpp/ggml.c")
+file (GLOB H_FILES "ggllm.cpp/ggml.h" "ggllm.cpp/llama.h")
 
 # ---------------------------------------------------------------------------------------------
 
@@ -358,24 +358,12 @@ endif()
 #
 
 
-target_include_directories(ggml PUBLIC ./llama.cpp)
+target_include_directories(ggml PUBLIC ./ggllm.cpp)
 target_compile_features(ggml PUBLIC c_std_11) # don't bump
 target_link_libraries(ggml PRIVATE Threads::Threads ${LLAMA_EXTRA_LIBS})
 if (BUILD_SHARED_LIBS)
     set_target_properties(ggml PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
-
-# add_library(llamacpp
-#        llama.cpp/llama.cpp
-#        llama.cpp/llama.h)
-#
-# target_include_directories(llamacpp PUBLIC ./llama.cpp)
-# target_compile_features(llama PUBLIC cxx_std_11) # don't bump
-# target_link_libraries(llama PRIVATE ggml ${LLAMA_EXTRA_LIBS})
-# if (BUILD_SHARED_LIBS)
-#     set_target_properties(llama PROPERTIES POSITION_INDEPENDENT_CODE ON)
-#     target_compile_definitions(llama PRIVATE LLAMA_SHARED LLAMA_BUILD)
-# endif()
 
 # ------------------
 

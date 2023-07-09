@@ -16,7 +16,7 @@
 #include <pybind11/functional.h>
 #include <pybind11/numpy.h>
 
-#include "../llama.cpp/llama.h"
+#include "../ggllm.cpp/llama.h"
 #include "main.h"
 
 

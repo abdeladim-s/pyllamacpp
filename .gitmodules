@@ -7,3 +7,6 @@
     path = llama.cpp
     url = https://github.com/ggerganov/llama.cpp.git
     branch = master
+[submodule "ggllm.cpp"]
+	path = ggllm.cpp
+	url = https://github.com/cmp-nct/ggllm.cpp
