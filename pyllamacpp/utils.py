@@ -15,6 +15,9 @@ import numpy as np
 import torch
 from sentencepiece import SentencePieceProcessor
 
+from pyllamacpp.backend import BackendType
+
+
 def llama_to_ggml(dir_model: str, ftype: int = 1) -> str:
     """
     A helper function to convert LLaMa Pytorch models to ggml,
@@ -183,5 +186,14 @@ def quantize(ggml_model_path: str, output_model_path: str = None, itype: int = 2
     return output_model_path
 
 
-def convert_gpt4all() -> str:
-    pass
+def get_backend_type(model_path):
+    with open(model_path, 'rb') as file:
+        magic = file.read(4)
+        if magic == b'ccgg':
+            # ggllmcpp model
+            print("Flacon model ...")
+            return BackendType.ggllmcpp
+        else:
+            # defualt to llama.cpp
+            print("LLaMA model ...")
+            return BackendType.llamacpp

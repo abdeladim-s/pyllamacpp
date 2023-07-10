@@ -18,7 +18,9 @@ __copyright__ = "Copyright 2023, "
 __license__ = "MIT"
 
 import logging
+from pyllamacpp.backend import BackendType, UnifiedBackend
 import _pyllamacpp as pp
+from pyllamacpp.utils import get_backend_type
 
 
 class Model:
@@ -73,25 +75,28 @@ class Model:
         if not Path(model_path).is_file():
             raise Exception(f"File {model_path} not found!")
 
-        self.llama_params = pp.llama_context_default_params()
-        # update llama_params
-        self.llama_params.n_ctx = n_ctx
-        self.llama_params.seed = seed
-        self.llama_params.n_gpu_layers = n_gpu_layers
-        self.llama_params.f16_kv = f16_kv
-        self.llama_params.logits_all = logits_all
-        self.llama_params.vocab_only = vocab_only
-        self.llama_params.use_mlock = use_mlock
-        self.llama_params.embedding = embedding
+        self.backend_type = get_backend_type(model_path)
+        self.backend = UnifiedBackend(self.backend_type)
 
-        self._ctx = pp.llama_init_from_file(model_path, self.llama_params)
+        self.params = self.backend.context_default_params()
+        # update llama_params
+        self.params.n_ctx = n_ctx
+        self.params.seed = seed
+        self.params.n_gpu_layers = n_gpu_layers
+        self.params.f16_kv = f16_kv
+        self.params.logits_all = logits_all
+        self.params.vocab_only = vocab_only
+        self.params.use_mlock = use_mlock
+        self.params.embedding = embedding
+
+        self._ctx = self.backend.init_from_file(model_path, self.params)
 
         # gpt params
-        self.gpt_params = pp.gpt_params()
+        self.gpt_params = self.backend.gpt_params()
 
         self.res = ""
 
-        self._n_ctx = pp.llama_n_ctx(self._ctx)
+        self._n_ctx = self.backend.n_ctx(self._ctx)
         self._last_n_tokens = [0] * self._n_ctx  # n_ctx elements
         self._n_past = 0
         self.prompt_cntext = prompt_context
@@ -106,9 +111,9 @@ class Model:
 
     def reset(self) -> None:
         """Resets the context"""
-        self._prompt_context_tokens = pp.llama_tokenize(self._ctx, self.prompt_cntext, True)
-        self._prompt_prefix_tokens = pp.llama_tokenize(self._ctx, self.prompt_prefix, True)
-        self._prompt_suffix_tokens = pp.llama_tokenize(self._ctx, self.prompt_suffix, False)
+        self._prompt_context_tokens = self.backend.tokenize(self._ctx, self.prompt_cntext, True)
+        self._prompt_prefix_tokens = self.backend.tokenize(self._ctx, self.prompt_prefix, True)
+        self._prompt_suffix_tokens = self.backend.tokenize(self._ctx, self.prompt_suffix, False)
         self._last_n_tokens = [0] * self._n_ctx  # n_ctx elements
         self._n_past = 0
 
@@ -118,7 +123,7 @@ class Model:
         :param text: text to be tokenized
         :return: List of tokens
         """
-        return pp.llama_tokenize(self._ctx, text, True)
+        return self.backend.tokenize.llama_tokenize(self._ctx, text, True)
 
     def detokenize(self, tokens: list):
         """
@@ -194,13 +199,13 @@ class Model:
         self.gpt_params.mirostat_eta = mirostat_eta
 
         if seed is not None:
-            pp.llama_set_rng_seed(self._ctx, seed)
+            self.backend.set_rng_seed(self._ctx, seed)
         else:
             seed = int(time.time())
-            pp.llama_set_rng_seed(self._ctx, seed)
+            self.backend.set_rng_seed(self._ctx, seed)
 
         input_tokens = self._prompt_prefix_tokens + \
-                       pp.llama_tokenize(self._ctx, prompt, len(self._prompt_prefix_tokens) == 0) + \
+                       self.backend.tokenize(self._ctx, prompt, len(self._prompt_prefix_tokens) == 0) + \
                        self._prompt_suffix_tokens
 
         # input_tokens = pp.llama_tokenize(self._ctx, prompt, True)
@@ -228,9 +233,9 @@ class Model:
             sequence_queue = []
             stop_word = antiprompt.strip()
 
-        n_ctx = pp.llama_n_ctx(self._ctx)
+        n_ctx = self.backend.n_ctx(self._ctx)
 
-        while infinite_generation or predicted_token != pp.llama_token_eos():
+        while infinite_generation or predicted_token != self.backend.token_eos():
             if len(predicted_tokens) > 0:
                 # infinite text generation via context swapping
                 if (self._n_past + len(predicted_tokens)) > n_ctx:
@@ -245,7 +250,7 @@ class Model:
                     if n_eval > self.gpt_params.n_batch:
                         n_eval = self.gpt_params.n_batch
 
-                    pp.llama_eval(self._ctx,
+                    self.backend.eval(self._ctx,
                                   predicted_tokens[i:],
                                   n_eval,
                                   self._n_past,
@@ -255,13 +260,13 @@ class Model:
             predicted_tokens.clear()
 
             # sampling
-            predicted_token = pp.sample_next_token(self._ctx, self.gpt_params, self._last_n_tokens)
+            predicted_token = self.backend.sample_next_token(self._ctx, self.gpt_params, self._last_n_tokens)
 
             predicted_tokens.append(predicted_token)
             # tokens come as raw undecoded bytes,
             # and we decode them, replacing those that can't be decoded.
             # I decoded here for fear of breaking the stopword logic,
-            token_str = pp.llama_token_to_str(self._ctx, predicted_token).decode('utf-8', "replace")
+            token_str = self.backend.token_to_str(self._ctx, predicted_token).decode('utf-8', "replace")
             if antiprompt is not None:
                 if token_str == '\n':
                     sequence_queue.append(token_str)
@@ -452,4 +457,4 @@ class Model:
 
     def __del__(self):
         if self._ctx:
-            pp.llama_free(self._ctx)
+            self.backend.free(self._ctx)

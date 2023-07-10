@@ -135,7 +135,7 @@ setup(
     author="Abdeladim Sadiki",
     description="Python bindings for llama.cpp",
     long_description=long_description,
-    ext_modules=[CMakeExtension("_pyllamacpp")],
+    ext_modules=[CMakeExtension("_pyllamacpp"), CMakeExtension("_pyggllmcpp")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     # extras_require={"test": ["pytest>=6.0"]},

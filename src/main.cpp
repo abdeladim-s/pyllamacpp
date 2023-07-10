@@ -172,23 +172,6 @@ pybind11::array wrap_array_ptr(float *v) {
                    capsule);
 }
 
-//py::array llama_get_logits_wrapper(struct llama_context_wrapper * ctx_w){
-//   struct llama_context * ctx = ctx_w->ptr;
-//   auto logits = llama_get_logits(ctx);
-////    std::vector<float> logits_vect;
-////    logits_vect.assign(std::begin(logits), std::end(logits));
-//   return wrap_array_ptr(logits);
-////    return py::buffer_info(
-////            m.data(),                               /* Pointer to buffer */
-////            sizeof(float),                          /* Size of one scalar */
-////            py::format_descriptor<float>::format(), /* Python struct-style format descriptor */
-////            2,                                      /* Number of dimensions */
-////            { m.rows(), m.cols() },                 /* Buffer dimensions */
-////            { sizeof(float) * m.cols(),             /* Strides (in bytes) for each index */
-////              sizeof(float) }
-////        );
-//
-//}
 
 float * llama_get_logits_wrapper(struct llama_context_wrapper * ctx_w){
    struct llama_context * ctx = ctx_w->ptr;
@@ -321,7 +304,7 @@ void llama_reset_timings_wrapper(struct llama_context_wrapper * ctx_w){
     return llama_reset_timings(ctx);
 }
 
-llama_token sample_next_token(struct llama_context_wrapper * ctx_w, gpt_params params, std::vector<llama_token> & last_n_tokens){
+llama_token llama_sample_next_token(struct llama_context_wrapper * ctx_w, gpt_params params, std::vector<llama_token> & last_n_tokens){
     // helper function to sample next token (based on the main example)
     struct llama_context * ctx = ctx_w->ptr;
     const int n_ctx = llama_n_ctx(ctx);
@@ -1448,7 +1431,7 @@ PYBIND11_MODULE(_pyllamacpp, m) {
     m.def("llama_sample_token_greedy", &llama_sample_token_greedy_wrapper);
     m.def("llama_sample_token", &llama_sample_token_wrapper);
 
-    m.def("sample_next_token", &sample_next_token); // helper function / not part of the llama.h API
+    m.def("llama_sample_next_token", &llama_sample_next_token); // helper function / not part of the llama.h API
 
     m.def("llama_print_timings", &llama_print_timings_wrapper);
     m.def("llama_reset_timings", &llama_reset_timings_wrapper);
@@ -1473,6 +1456,8 @@ PYBIND11_MODULE(_pyllamacpp, m) {
 
        ;
 
+//    // falcon
+//    falcon_module(m);
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

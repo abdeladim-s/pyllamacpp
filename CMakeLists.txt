@@ -14,9 +14,10 @@ add_subdirectory(pybind11)
 add_subdirectory(ggllm.cpp)
 # add_subdirectory(ggml)
 
-file (GLOB CPP_FILES "ggllm.cpp/llama.cpp")
+file (GLOB LLAMA_CPP_FILES  "ggllm.cpp/llama.cpp")
+file (GLOB FALCON_CPP_FILES  "ggllm.cpp/libfalcon.cpp" "ggllm.cpp/cmpnct_unicode.cpp")
 file (GLOB C_FILES "ggllm.cpp/ggml.c")
-file (GLOB H_FILES "ggllm.cpp/ggml.h" "ggllm.cpp/llama.h")
+file (GLOB H_FILES "ggllm.cpp/*.h" "src/*.h")
 
 # ---------------------------------------------------------------------------------------------
 
@@ -369,14 +370,24 @@ endif()
 
 pybind11_add_module(_pyllamacpp
     ${H_FILES}
-	${CPP_FILES}
+	${LLAMA_CPP_FILES}
 	${C_FILES}
 	src/main.cpp
+)
+
+pybind11_add_module(_pyggllmcpp
+    ${H_FILES}
+	${FALCON_CPP_FILES}
+	${C_FILES}
+    src/falcon.cpp
 )
 
 
 target_compile_definitions(_pyllamacpp
                            PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
+target_compile_definitions(_pyggllmcpp
+                           PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
+
 if (ACCELERATE_FRAMEWORK)
     target_link_libraries(_pyllamacpp PRIVATE "-framework Accelerate")
 endif()

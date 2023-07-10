@@ -27,7 +27,7 @@ struct gpt_params {
     int32_t n_gpu_layers  = 0;   // number of layers to store in VRAM
 
     // sampling parameters
-    std::unordered_map<llama_token, float> logit_bias; // logit bias for specific tokens
+    std::unordered_map<int, float> logit_bias; // logit bias for specific tokens
     int32_t top_k             = 40;    // <= 0 to use vocab size
     float   top_p             = 0.95f; // 1.0 = disabled
     float   tfs_z             = 1.00f; // 1.0 = disabled
