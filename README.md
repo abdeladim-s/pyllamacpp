@@ -6,7 +6,7 @@
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
-Python bindings for [llama.cpp](https://github.com/ggerganov/llama.cpp)
+Python bindings for [ggllm.cpp](https://github.com/ggerganov/llama.cpp)
 
 
 <p align="center">
