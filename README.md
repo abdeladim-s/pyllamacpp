@@ -6,8 +6,8 @@
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a>
 
-Python bindings for [llama.cpp](https://github.com/ggerganov/llama.cpp)
-
+* Python bindings for [llama.cpp](https://github.com/ggerganov/llama.cpp).
+* If you are looking to run **Flacon** models, take a look at the [ggllm branch](https://github.com/abdeladim-s/pyllamacpp/tree/ggllm.cpp).
 
 <p align="center">
   <img src="./docs/demo.gif">
@@ -67,7 +67,7 @@ pip install pyllamacpp==2.2.0
 You can run the following simple command line interface to test the package once it is installed:
 
 ```shell
-pyllamacpp path/to/ggml/model
+pyllamacpp path/to/model.bin
 ```
 
 ```shell
@@ -115,13 +115,12 @@ options:
 # Tutorial
 
 ### Quick start
-A simple `Pythonic` API is built on top of `llama.cpp` C/C++ functions. You can call it from Python as follows:
 
 ```python
 from pyllamacpp.model import Model
 
-model = Model(model_path='./models/gpt4all-model.bin')
-for token in model.generate("Tell me a joke ?"):
+model = Model(model_path='/path/to/model.bin')
+for token in model.generate("Tell me a joke ?\n"):
     print(token, end='', flush=True)
 ```
 
@@ -131,7 +130,7 @@ You can set up an interactive dialogue by simply keeping the `model` variable al
 ```python
 from pyllamacpp.model import Model
 
-model = Model(model_path='/path/to/ggml/model')
+model = Model(model_path='/path/to/model.bin')
 while True:
     try:
         prompt = input("You: ", flush=True)
@@ -161,7 +160,7 @@ Bob: Welcome! I'm here to assist you with anything you need. What can I do for y
 prompt_prefix = "\nUser:"
 prompt_suffix = "\nBob:"
 
-model = Model(model_path='/path/to/ggml/model',
+model = Model(model_path='/path/to/model.bin',
               n_ctx=512,
               prompt_context=prompt_context,
               prompt_prefix=prompt_prefix,
