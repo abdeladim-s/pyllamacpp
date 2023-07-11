@@ -82,7 +82,7 @@ options:
 ```python
 from pyllamacpp.model import Model
 
-model = Model(model_path='./path/to/model.bin')
+model = Model(model_path='/path/to/model.bin')
 for token in model.generate("Tell me a joke ?\n"):
     print(token, end='', flush=True)
 ```
@@ -123,7 +123,7 @@ Bob: Welcome! I'm here to assist you with anything you need. What can I do for y
 prompt_prefix = "\nUser:"
 prompt_suffix = "\nBob:"
 
-model = Model(model_path='/path/to/ggml/model',
+model = Model(model_path='/path/to/model.bin',
               n_ctx=512,
               prompt_context=prompt_context,
               prompt_prefix=prompt_prefix,
