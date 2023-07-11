@@ -13,7 +13,6 @@
     * [Quick start](#quick-start)
     * [Interactive Dialogue](#interactive-dialogue)
     * [Attribute a persona to the language model](#attribute-a-persona-to-the-language-model)
-* [API reference](#api-reference)
 * [Supported models](#supported-models)
 * [Discussions and contributions](#discussions-and-contributions)
 * [License](#license)
