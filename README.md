@@ -1,31 +1,9 @@
-# PyLLaMACpp
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![PyPi version](https://badgen.net/pypi/v/pyllamacpp)](https://pypi.org/project/pyllamacpp/)
-[![Downloads](https://static.pepy.tech/badge/pyllamacpp)](https://pepy.tech/project/pyllamacpp)
-<a target="_blank" href="https://colab.research.google.com/github/abdeladim-s/pyllamacpp/blob/main/examples/PyLLaMACpp.ipynb">
-  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
-</a>
+# PyLLaMACpp - ggllm
 
-Python bindings for [ggllm.cpp](https://github.com/ggerganov/llama.cpp)
+* Python bindings for [ggllm.cpp](https://github.com/cmp-nct/ggllm.cpp)
+* `ggllm.cpp` is a fork of [llama.cpp](https://github.com/ggerganov/llama.cpp) to run quantized Falcon Models.
+* You can run Falcon as well as LlaMA models using the same `pyllamacpp` API.
 
-
-<p align="center">
-  <img src="./docs/demo.gif">
-</p>
-
-
-For those who don't know, `llama.cpp` is a port of Facebook's LLaMA model in pure C/C++:
-
-<blockquote>
-
-- Without dependencies
-- Apple silicon first-class citizen - optimized via ARM NEON
-- AVX2 support for x86 architectures
-- Mixed F16 / F32 precision
-- 4-bit quantization support
-- Runs on the CPU
-
-</blockquote>
 
 # Table of contents
 <!-- TOC -->
@@ -42,24 +20,9 @@ For those who don't know, `llama.cpp` is a port of Facebook's LLaMA model in pur
 <!-- TOC -->
 
 # Installation
-1. The easy way is to install the prebuilt wheels
-```bash
-pip install pyllamacpp
-```
-
-However, the compilation process of `llama.cpp` is taking into account the architecture of the target `CPU`, 
-so you might need to build it from source:
 
 ```shell
-pip install git+https://github.com/abdeladim-s/pyllamacpp.git
-```
-
-:warning: **Note**
-
-[This PR](https://github.com/ggerganov/llama.cpp/pull/1405) introduced some breaking changes.
-If you want to use older models, use version `2.2.0`:
-```bash
-pip install pyllamacpp==2.2.0
+pip install git+https://github.com/abdeladim-s/pyllamacpp/tree/ggllm.cpp
 ```
 
 # CLI 
@@ -67,7 +30,7 @@ pip install pyllamacpp==2.2.0
 You can run the following simple command line interface to test the package once it is installed:
 
 ```shell
-pyllamacpp path/to/ggml/model
+pyllamacpp path/to/model.bin
 ```
 
 ```shell
@@ -115,13 +78,12 @@ options:
 # Tutorial
 
 ### Quick start
-A simple `Pythonic` API is built on top of `llama.cpp` C/C++ functions. You can call it from Python as follows:
 
 ```python
 from pyllamacpp.model import Model
 
-model = Model(model_path='./models/gpt4all-model.bin')
-for token in model.generate("Tell me a joke ?"):
+model = Model(model_path='./path/to/model.bin')
+for token in model.generate("Tell me a joke ?\n"):
     print(token, end='', flush=True)
 ```
 
@@ -131,7 +93,7 @@ You can set up an interactive dialogue by simply keeping the `model` variable al
 ```python
 from pyllamacpp.model import Model
 
-model = Model(model_path='/path/to/ggml/model')
+model = Model(model_path='/path/to/model.bin')
 while True:
     try:
         prompt = input("You: ", flush=True)
@@ -187,36 +149,7 @@ while True:
 ```
 
 # Supported models
-All models supported by `llama.cpp` should be supported basically:
-
-<blockquote>
-
-**Supported models:**
-
-- [X] LLaMA 🦙
-- [X] [Alpaca](https://github.com/ggerganov/llama.cpp#instruction-mode-with-alpaca)
-- [X] [GPT4All](https://github.com/ggerganov/llama.cpp#using-gpt4all)
-- [X] [Chinese LLaMA / Alpaca](https://github.com/ymcui/Chinese-LLaMA-Alpaca)
-- [X] [Vigogne (French)](https://github.com/bofenghuang/vigogne)
-- [X] [Vicuna](https://github.com/ggerganov/llama.cpp/discussions/643#discussioncomment-5533894)
-- [X] [Koala](https://bair.berkeley.edu/blog/2023/04/03/koala/)
-- [X] [OpenBuddy 🐶 (Multilingual)](https://github.com/OpenBuddy/OpenBuddy)
-- [X] [Pygmalion 7B / Metharme 7B](#using-pygmalion-7b--metharme-7b)
-- [X] [WizardLM](https://github.com/nlpxucan/WizardLM)
-
-</blockquote>
-
-# Advanced usage
-For advanced users, you can access the [llama.cpp C-API](https://github.com/ggerganov/llama.cpp/blob/master/llama.h) functions directly to make your own logic.
-All functions from `llama.h` are exposed with the binding module [`_pyllamacpp`](https://abdeladim-s.github.io/pyllamacpp/#_pyllamacpp).
-
-# API reference
-You can check the [API reference documentation](https://abdeladim-s.github.io/pyllamacpp/) for more details.
-
-# FAQs
-* [How to build pyllamacpp without AVX2 or FMA.](https://github.com/nomic-ai/pygpt4all/issues/71)
-* [pyllamacpp does not support M1 chips MacBook](https://github.com/nomic-ai/pygpt4all/issues/57#issuecomment-1519197837)
-* [ImportError: DLL failed while importing _pyllamacpp](https://github.com/nomic-ai/pygpt4all/issues/53#issuecomment-1529772010)
+All models supported by `ggllm.cpp` (The new [GGCC format](https://huggingface.co/TheBloke/falcon-7b-instruct-GGML)) and `llama.cpp` should be supported.
 
 # Discussions and contributions
 If you find any bug, please open an [issue](https://github.com/abdeladim-s/pyllamacpp/issues).
@@ -225,5 +158,5 @@ If you have any feedback, or you want to share how you are using this project, f
 
 # License
 
-This project is licensed under the same license as [llama.cpp](https://github.com/ggerganov/llama.cpp/blob/master/LICENSE) (MIT  [License](./LICENSE)).
+MIT  [License](./LICENSE).
 
