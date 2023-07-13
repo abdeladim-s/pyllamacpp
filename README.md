@@ -19,10 +19,19 @@
 <!-- TOC -->
 
 # Installation
+* From source
+0. Create and activate a virtual environment.
+1. ```git clone -b ggllm.cpp --recursive https://github.com/abdeladim-s/pyllamacpp```
+2. ```cd pyllamacpp```
+3. ```pip install -e .```
+
+
+* If it happens you are using Linux, A Prebuilt wheel can be installed as follows:
 
 ```shell
-pip install git+https://github.com/abdeladim-s/pyllamacpp/tree/ggllm.cpp
+pip install https://github.com/abdeladim-s/pyllamacpp/releases/download/v2.4.1/pyllamacpp-ggllm-2.4.1-cp310-cp310-linux_x86_64.whl
 ```
+(It should work on `WSL` as well I guess!!)
 
 # CLI 
 
