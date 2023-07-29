@@ -328,7 +328,7 @@ class Model:
                      n_batch: int = 8,
                      n_keep: int = 0,
                      interactive: bool = False,
-                     anti_prompt: List = [],
+                     antiprompt: List = [],
                      instruct: bool = False,
                      verbose_prompt: bool = False,
                      ) -> str:
@@ -377,7 +377,7 @@ class Model:
         self.gpt_params.n_batch = n_batch
         self.gpt_params.n_keep = n_keep
         self.gpt_params.interactive = interactive
-        self.gpt_params.anti_prompt = anti_prompt
+        self.gpt_params.antiprompt = antiprompt
         self.gpt_params.instruct = instruct
         self.gpt_params.verbose_prompt = verbose_prompt
 
