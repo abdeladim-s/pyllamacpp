@@ -7,7 +7,7 @@
 </a>
 
 * Python bindings for [llama.cpp](https://github.com/ggerganov/llama.cpp).
-* If you are looking to run **Flacon** models, take a look at the [ggllm branch](https://github.com/abdeladim-s/pyllamacpp/tree/ggllm.cpp).
+* If you are looking to run **Falcon** models, take a look at the [ggllm branch](https://github.com/abdeladim-s/pyllamacpp/tree/ggllm.cpp).
 
 <p align="center">
   <img src="./docs/demo.gif">
