@@ -30,13 +30,16 @@ For those who don't know, `llama.cpp` is a port of Facebook's LLaMA model in pur
 # Table of contents
 <!-- TOC -->
 * [Installation](#installation)
-* [CLI](#cli)
+* [CLI](#cli-)
 * [Tutorial](#tutorial)
     * [Quick start](#quick-start)
     * [Interactive Dialogue](#interactive-dialogue)
     * [Attribute a persona to the language model](#attribute-a-persona-to-the-language-model)
-* [API reference](#api-reference)
+    * [Example usage with langchain](#example-usage-with-langchain)
 * [Supported models](#supported-models)
+* [Advanced usage](#advanced-usage)
+* [API reference](#api-reference)
+* [FAQs](#faqs)
 * [Discussions and contributions](#discussions-and-contributions)
 * [License](#license)
 <!-- TOC -->
@@ -183,6 +186,30 @@ while True:
     print()
   except KeyboardInterrupt:
     break
+```
+
+### Example usage with [langchain](https://github.com/langchain-ai/langchain)
+
+```python
+from pyllamacpp.langchain_llm import PyllamacppLLM
+
+llm = PyllamacppLLM(
+    model="path/to/ggml/model",
+    temp=0.75,
+    n_predict=50,
+    top_p=1,
+    top_k=40
+)
+
+template = "\n\n##Instruction:\n:{question}\n\n##Response:\n"
+
+prompt = PromptTemplate(template=template, input_variables=["question"])
+
+llm_chain = LLMChain(prompt=prompt, llm=llm)
+
+question = "What are large language models?"
+answer = llm_chain.run(question)
+print(answer)
 ```
 
 # Supported models

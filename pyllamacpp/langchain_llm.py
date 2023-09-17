@@ -1,0 +1,181 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Example usage of Pyllamacpp with [langchain](https://github.com/langchain-ai/langchain) """
+
+from typing import Any, Dict, List, Mapping, Optional, Set
+from langchain.pydantic_v1 import Field, root_validator
+from langchain.llms.base import LLM
+from langchain.llms.utils import enforce_stop_tokens
+
+
+class PyllamacppLLM(LLM):
+    """
+    A langchain LLM class to call Pyllamacpp compatible LLMs
+
+    Example usage
+    ```python
+    from pyllamacpp.langchain_llm import PyllamacppLLM
+
+    llm = PyllamacppLLM(
+        model="path/to/ggml/model",
+        temp=0.75,
+        n_predict=50,
+        top_p=1,
+        top_k=40
+    )
+
+    template = "\n\n##Instruction:\n:{question}\n\n##Response:\n"
+
+    prompt = PromptTemplate(template=template, input_variables=["question"])
+
+    llm_chain = LLMChain(prompt=prompt, llm=llm)
+
+    question = "What are large language models?"
+    answer = llm_chain.run(question)
+    print(answer)
+    ```
+    """
+
+    model: str
+    """Path to the ggml model file."""
+
+    n_ctx: int = Field(512, alias="n_ctx")
+    """Token context window."""
+
+    seed: int = Field(0, alias="seed")
+    """Seed. If -1, a random seed is used."""
+
+    f16_kv: bool = Field(False, alias="f16_kv")
+    """Use half-precision for key/value cache."""
+
+    logits_all: bool = Field(False, alias="logits_all")
+    """Return logits for all tokens, not just the last token."""
+
+    vocab_only: bool = Field(False, alias="vocab_only")
+    """Only load the vocabulary, no weights."""
+
+    use_mlock: bool = Field(False, alias="use_mlock")
+    """Force system to keep model in RAM."""
+
+    embedding: bool = Field(False, alias="embedding")
+    """Use embedding mode only."""
+
+    n_threads: Optional[int] = Field(4, alias="n_threads")
+    """Number of threads to use."""
+
+    n_predict: Optional[int] = 50
+    """The maximum number of tokens to generate."""
+
+    temp: Optional[float] = 0.8
+    """The temperature to use for sampling."""
+
+    top_p: Optional[float] = 0.95
+    """The top-p value to use for sampling."""
+
+    top_k: Optional[int] = 40
+    """The top-k value to use for sampling."""
+
+    echo: Optional[bool] = False
+    """Whether to echo the prompt."""
+
+    stop: Optional[List[str]] = []
+    """A list of strings to stop generation when encountered."""
+
+    repeat_last_n: Optional[int] = 64
+    "Last n tokens to penalize"
+
+    repeat_penalty: Optional[float] = 1.3
+    """The penalty to apply to repeated tokens."""
+
+    n_batch: int = Field(1, alias="n_batch")
+    """Batch size for prompt processing."""
+
+    streaming: bool = False
+    """Whether to stream the results or not."""
+
+    client: Any = None  #: :meta private:
+
+    @property
+    def _default_params(self) -> Dict[str, Any]:
+        """Get the identifying parameters."""
+        return {
+            "seed": self.seed,
+            "n_predict": self.n_predict,
+            "n_threads": self.n_threads,
+            "n_batch": self.n_batch,
+            "repeat_last_n": self.repeat_last_n,
+            "repeat_penalty": self.repeat_penalty,
+            "top_k": self.top_k,
+            "top_p": self.top_p,
+            "temp": self.temp,
+        }
+
+    @staticmethod
+    def _llama_param_names() -> Set[str]:
+        """Get the identifying parameters."""
+        return {
+            "n_ctx",
+            "seed",
+            "f16_kv",
+            "logits_all",
+            "vocab_only",
+            "use_mlock",
+            "embedding",
+        }
+
+    @root_validator()
+    def validate_environment(cls, values: Dict) -> Dict:
+        """Validate@ that the python package exists in the environment."""
+        try:
+            from pyllamacpp.model import Model
+
+            llama_keys = cls._llama_param_names()
+            model_kwargs = {k: v for k, v in values.items() if k in llama_keys}
+            values["client"] = Model(
+                model_path=values["model"],
+                **model_kwargs,
+            )
+
+        except ImportError:
+            raise ValueError(
+                "Please make sure that pyllamacpp is working correctly."
+            )
+        return values
+
+    @property
+    def _identifying_params(self) -> Mapping[str, Any]:
+        """Get the identifying parameters."""
+        return {
+            "model": self.model,
+            **self._default_params,
+            **{
+                k: v
+                for k, v in self.__dict__.items()
+                if k in PyllamacppLLM._llama_param_names()
+            },
+        }
+
+    @property
+    def _llm_type(self) -> str:
+        """Return the type of llm."""
+        return "Pyllamacpp"
+
+    def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
+        """
+         Calls Pyllamacpp's generate method.
+
+        :param prompt: The prompt to pass into the model.
+        :param stop: A list of strings to stop generation when encountered.
+        :return: The string generated by the model.
+        """
+        text = ""
+        for tok in self.client.generate(
+            prompt,
+            **self._default_params,
+        ):
+            text += tok
+        if stop is not None:
+            text = enforce_stop_tokens(text, stop)
+        return text
+
