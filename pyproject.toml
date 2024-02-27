@@ -47,8 +47,3 @@ extend-ignore = [
   "E501",   # Line too long
 ]
 target-version = "py39"
-
-# dependencies
-[project]
-name = "pyllamacpp"
-dynamic = ["dependencies", "version", "readme"]
